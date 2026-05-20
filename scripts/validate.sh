@@ -50,6 +50,16 @@ roles="$ROOT/using-paseo/references/roles.md"
 grep -q "内联摘要\|按需读取" "$roles" && pass "精简传递策略" || fail "精简传递策略缺失"
 grep -q "合规检查" "$roles" && pass "合规检查规程" || fail "合规检查规程缺失"
 grep -q "完工通知\|Completion" "$roles" && pass "完工通知规程" || fail "完工通知规程缺失"
+grep -q "story-updater" "$roles" && pass "story-updater 角色规程" || fail "story-updater 角色规程缺失"
+
+echo ""
+echo "=== 7. 开发故事与历史资产目录机制校验 ==="
+for t in data_models apis modules; do
+  if [ -f "$ROOT/using-paseo/references/${t}_template.md" ]; then pass "模板 $t 存在"; else fail "缺失模板 ${t}_template.md"; fi
+done
+if grep -q "mkdir -p.*\/story\|mkdir -p.*\.paseo\/story" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story 目录初始化"; else fail "SKILL.md 缺失 story 目录创建"; fi
+if grep -q "story-updater" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story-updater 自动更新资产机制"; else fail "SKILL.md 缺失 story-updater 机制"; fi
+if grep -q "data_models.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含历史资产强注入"; else fail "SKILL.md 缺失历史资产强注入"; fi
 
 echo ""
 echo "========================================"
@@ -57,3 +67,4 @@ echo "结果: $PASS 通过, $FAIL 失败"
 echo "========================================"
 
 if [ "$FAIL" -gt 0 ]; then exit 1; fi
+

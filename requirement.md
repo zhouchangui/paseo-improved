@@ -128,23 +128,42 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
     plans/
       <slug>.md            # 主计划文件
       <slug>/
-        iter_1_design_tasks.md   # 迭代设计文档
+        iter_1_design_tasks.md   # 迭代设计与任务文档
         iter_2_design_tasks.md
         ...
+    story/                 # 开发故事与历史资产目录 (Architecture & Asset Map)
+      data_models.md       # 数据结构与表结构资产
+      apis.md              # 核心 API 与接口资产
+      modules.md           # 包、模块职责与页面路由拓扑资产
 ```
-使用 `mkdir -p` 确保幂等创建，已存在时不报错。
+使用 `mkdir -p` 确保幂等创建，已存在时不报错。若 story 下资产文件不存在，从模板自愈初始化。
 
 ### 3.3 基于文件的上下文传递
 
 - 创建子 Agent 时，**必须在 initialPrompt 中传递文件绝对路径**：
   - 主计划文件绝对路径
-  - 当前迭代设计文档绝对路径
+  - 当前迭代设计与任务文档绝对路径
   - 避障学习记录路径（`.paseo/learnings.jsonl`）
-- **精简传递策略**：Orchestrator 在 initialPrompt 中内联传递**关键摘要**（迭代目标 + 验证标准，不超过 5 行），同时附带文件绝对路径供子 Agent 需要完整细节时读取。不强制子 Agent 一次性读取全部 3 个文件的完整内容。
-- 子 Agent 启动后**必须先读取迭代设计文档**（这是最小必要上下文），主计划和 learnings 可按需读取。
-- **合规检查**：在 verifier prompt 中增加一条检查——确认 worker 的早期 tool call 中包含 `view_file` 读取设计文档，若缺失则判定为不合规。
+  - **核心开发资产文档路径**：`.paseo/story/` 下关联资产文档的绝对路径
+- **精简传递策略**：Orchestrator 在 initialPrompt 中内联传递**关键摘要**（迭代目标 + 验证标准，不超过 5 行），同时附带文件绝对路径供子 Agent 需要完整细节时读取。不强制子 Agent 一次性读取全部文件。
+- 子 Agent 启动后**必须先读取迭代设计与任务文档**（这是最小必要上下文），并根据其改动范围，读取关联的历史开发资产文档。
+- **合规检查**：在 verifier prompt 中增加一条检查——确认 worker 的早期 tool call 中包含 `view_file` 读取设计与任务文档，若缺失则判定为不合规。
 
-### 3.4 子 Agent 完工通知与状态同步
+### 3.4 开发故事与历史资产目录机制 (Asset Map & Story Closed-Loop)
+
+为了在漫长且多迭代的开发中保持项目架构、接口、数据模型以及包页面的一致性，彻底避免“重复造轮子”和旧组件架构腐化，Orchestrator 必须强制执行以下历史资产的闭环管控机制：
+
+1. **模板自愈初始化**：在 Step 0 偏好设置检查与目录初始化中，自动创建 `<项目根目录>/.paseo/story/` 目录。若对应的 `data_models.md`、`apis.md`、`modules.md` 文件不存在，自动使用 `using-paseo/references/` 下的模板文件进行复制和自愈。
+2. **前置强注入 (Asset Injection)**：
+   - 在 Step 5.B 派生子 Agent 驱动实现时，主 Agent 在 `initialPrompt` 中**必须以绝对路径形式注入 `.paseo/story/` 下关联资产文件的地址**。
+   - 强约束：子 Agent 必须将“**读取关联资产文档**”作为启动后极高优先级的前置规程动作（若本次迭代包含 API 修改则首步读取 `apis.md`；若涉及数据结构修改则首步读取 `data_models.md`，以此类推）。
+3. **完工后自动刷新 (Auto-refresh on Completion)**：
+   - 在 Step 5.C 子 Agent 完工通知与状态同步阶段，Orchestrator 在将主计划状态勾选为 `[x]` 之后，**必须紧接着执行一个资产审查与刷新步骤**。
+   - 主 Agent（或派生的 `story-updater` 角色）分析子 Agent 本轮迭代的所有变更（代码 diff 和受影响文件）。
+   - 若发现本轮迭代新增或修改了数据库表结构、核心类/服务接口、公共 API 路由、新的子包或前端展示页面，**必须第一时间使用代码替换工具，增量更新 `.paseo/story/` 下对应的 `.md` 文档**。
+   - 所有的增量资产更新描述中，必须以标准格式标注改动的迭代代号，例如 `* [Updated in Iter 2] 新增 /api/v1/auth 登录接口`，确保该历史资产库成为整个项目最新、最准确的架构与资产蓝图（Source of Truth）。
+
+### 3.5 子 Agent 完工通知与状态同步
 
 - 子 Agent 完成任务后必须通知主 Agent。
 - 主 Agent 收到通知后，**第一时间更新主计划文件的状态**（标记 `[x]` 或 `[!]`），然后才能继续后续工作。

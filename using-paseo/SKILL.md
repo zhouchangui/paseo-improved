@@ -69,7 +69,9 @@ Step 0.2: 自主判定执行模式 (quick / full)
 
 1. 读取 `~/.paseo/orchestration-preferences.json` 以获取底层 Agent 的 Provider 分发。
 2. **UI 设计 Gemini 专属约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider **强制限定为 `gemini` 系列模型**。无 Gemini 可用时，暂停并通知用户，不得降级。
-3. **自动初始化 `.paseo/` 目录**：运行 `mkdir -p <项目根目录>/.paseo/plans` 确保目录结构存在。
+3. **自动初始化 `.paseo/` 目录与历史资产库自愈**：
+   - 运行 `mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.paseo/story` 确保目录结构存在。
+   - 历史资产库自愈：检查 `.paseo/story/` 目录下是否存在 `data_models.md`、`apis.md` 和 `modules.md`。若有任何文件缺失，自动将 `using-paseo/references/` 下对应的模板文件拷贝/写入生成至该目录下，确保架构基础资产库健全。
 4. **Paseo 命令行自动检测与初始化安装**：
    - 检查当前系统 `PATH` 中是否能成功执行 `paseo`（通过 `which paseo` 或运行 `paseo --version`）。
    - 若未在 `PATH` 中找到：
@@ -167,19 +169,22 @@ Orchestrator 在 `initialPrompt` 中必须：
 1. **内联关键摘要**（迭代目标 + 验证标准，不超过 5 行）。
 2. **附带文件绝对路径**供子 Agent 按需深入查阅：
 
-```
 ## 上下文摘要
 - 迭代目标：<一句话目标>
 - 验证方式：<logs|browser|manual>
 - 验证标准：<具体通过条件>
 
-## 必读文件（启动后第一步必须 view_file 读取迭代设计文档）
-- 迭代设计文档：<iter_N_design_tasks.md 绝对路径>
+## 必读文件（启动后第一步必须 view_file 读取迭代设计文档，并根据改动范围读取对应关联资产）
+- 迭代设计与任务文档：<iter_N_design_tasks.md 绝对路径>
 - 主计划文件（按需）：<主计划文件绝对路径>
 - 避障学习记录（按需）：<项目根目录>/.paseo/learnings.jsonl
 
-严禁跳过迭代设计文档的读取。严禁基于口头转述猜测行事。
-```
+## 核心历史开发资产（若本次迭代涉及数据模型、API 接口、路由页面或包结构改动，第一步必须同时读取并绝对遵守对应资产定义）
+- 数据模型资产：<项目根目录>/.paseo/story/data_models.md
+- 核心接口资产：<项目根目录>/.paseo/story/apis.md
+- 包与模块资产：<项目根目录>/.paseo/story/modules.md
+
+严禁跳过迭代设计文档的读取。严禁违反已有的核心历史开发资产设计进行重复造轮子或破坏性重构。
 
 - 启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码。
 - 如果这是 UI 或 Styling 改动，**强制要求 `upaseo-loop` 的 worker 只能使用 Gemini 模型**。
@@ -193,8 +198,13 @@ Orchestrator 在 `initialPrompt` 中必须：
 2. **立即更新主计划状态**：在 `.paseo/plans/<slug>.md` 中将当前迭代的状态从 `[ ]` 更新为 `[x]`（成功）或 `[!]`（受阻需修复）。
 3. **追加进度 Notes**：在主计划文件的 `Progress Notes` 段落中追加本迭代的核心完成说明。
 4. **保存主计划文件后，方可进入后续流程**。
+5. **增量刷新历史开发资产库 (Story Auto-Update)**：
+   - 主 Agent 分析子 Agent 本轮迭代的所有变更（代码 diff 和受影响文件）。
+   - 若发现本轮迭代新增或修改了数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录或者前端展示页面路由：
+     - 主 Agent 必须直接启动或扮演 `story-updater` 角色，使用代码修改工具增量更新 `.paseo/story/` 下对应的 `data_models.md`、`apis.md` 或 `modules.md` 文档。
+     - 追加的规范描述必须是极简的高密度信息，并统一使用 `* [Updated in Iter <N>]` 格式为前缀，确保资产库实时、最真实地反映系统最新蓝图。
 
-> **严禁**：子 Agent 完工后直接跳到下一阶段而不更新主计划文件。
+> **严禁**：子 Agent 完工后直接跳到下一阶段而不更新主计划文件与增量刷新关联资产。
 
 #### D. 优先日志验证 (Log-Based Verification)
 - 无论是 `upaseo-loop` 的自动验证，还是后续的 Auditor `verify` 阶段，都**必须遵循"优先日志验证"原则**。
