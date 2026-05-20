@@ -17,7 +17,7 @@ Step 0.1: 前置读取 learnings.jsonl
 Step 0.2: 判定为快速模式 → 告知用户（一句话理由）
   │
   ▼
-创建单迭代设计文档 (iter_1_design.md)
+创建单迭代设计文档 (iter_1_design_tasks.md)
   │
   ▼
 直接实现（upaseo-loop 或 Agent 自行修改）

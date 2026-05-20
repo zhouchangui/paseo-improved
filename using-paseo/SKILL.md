@@ -42,7 +42,7 @@ Step 0.2: 自主判定执行模式 (quick / full)
        ┌──────────────────── 下一个迭代 ────────────────────────┘
        │
        ▼
-      创建迭代设计文档 (iter_N_design.md)
+      创建迭代设计文档 (iter_N_design_tasks.md)
        │
        ▼
       派生子 Agent (内联摘要 + 绝对路径) ──> upaseo-loop 实现
@@ -149,7 +149,7 @@ Step 0.2: 自主判定执行模式 (quick / full)
 针对路线图中未完成的每一个迭代（N），必须依次严密执行以下子流程：
 
 #### A. 创建单迭代设计与验证文档
-在 `.paseo/plans/<slug>/iter_<N>_design.md` 创建独立的设计文档。必须包含以下段落：
+在 `.paseo/plans/<slug>/iter_<N>_design_tasks.md` 创建独立的设计文档。必须包含以下段落：
 1. **迭代目标 (Iteration Goal)**：清晰描述本轮增量迭代要达到的具体效果。
 2. **极简技术方案 (Surgical Design)**：遵循极简主义设计，不留任何冗余接口。
 3. **验证计划 (Verification Plan)**：
@@ -174,7 +174,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 - 验证标准：<具体通过条件>
 
 ## 必读文件（启动后第一步必须 view_file 读取迭代设计文档）
-- 迭代设计文档：<iter_N_design.md 绝对路径>
+- 迭代设计文档：<iter_N_design_tasks.md 绝对路径>
 - 主计划文件（按需）：<主计划文件绝对路径>
 - 避障学习记录（按需）：<项目根目录>/.paseo/learnings.jsonl
 
@@ -282,5 +282,5 @@ Orchestrator 在 `initialPrompt` 中必须：
 若执行过程中中断，重新调用 `/using-paseo <slug>` 时：
 1. **首先执行 Step 0 和 Step 0.1**：初始化目录、读取 learnings。
 2. 扫描 `.paseo/plans/<slug>.md` 确定当前处于哪一个未完成的迭代。
-3. 读取该迭代的 `iter_<N>_design.md` 文件。
+3. 读取该迭代的 `iter_<N>_design_tasks.md` 文件。
 4. 从对应的"设计"、"upaseo-loop 实现"、"日志验证"或"用户验证网关"现场无缝恢复执行。
