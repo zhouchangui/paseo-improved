@@ -23,9 +23,15 @@ done
 
 echo ""
 echo "=== 2. 符号链接完整性 ==="
+echo "--- 2.1 ~/.agents/skills/ 符号链接 ---"
 for s in "${ALL_SKILLS[@]}"; do
   target=$(readlink "$HOME/.agents/skills/$s" 2>/dev/null || echo "")
-  if [ -d "$target" ] && [ -f "$target/SKILL.md" ]; then pass "$s -> $target"; else fail "$s: 链接无效或不存在"; fi
+  if [ -d "$target" ] && [ -f "$target/SKILL.md" ]; then pass "$s -> $target"; else fail "$s: ~/.agents/skills/ 链接无效或不存在"; fi
+done
+echo "--- 2.2 ~/.gemini/config/skills/ 符号链接 ---"
+for s in "${ALL_SKILLS[@]}"; do
+  target=$(readlink "$HOME/.gemini/config/skills/$s" 2>/dev/null || echo "")
+  if [ -d "$target" ] && [ -f "$target/SKILL.md" ]; then pass "$s -> $target"; else fail "$s: ~/.gemini/config/skills/ 链接无效或不存在"; fi
 done
 
 echo ""

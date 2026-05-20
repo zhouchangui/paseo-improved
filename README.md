@@ -12,6 +12,8 @@
 | `upaseo-brainstorm` | 脑暴收敛：极简方案设计 | 由 using-paseo 自动调用 |
 | `upaseo-simplify` | PR 前代码极致精简 | 由 using-paseo 自动调用 |
 | `upaseo-reviewer` | PR 前质量自审 | 由 using-paseo 自动调用 |
+| `upaseo-init` | 项目初始化：自动构建 `.paseo/` 结构并逆向扫描提炼四大资产 | `/upaseo-init` |
+| `upaseo-ship` | 自动化发布：合并迭代分支、清理工作区、固化历史资产版本与 CHANGELOG | `/upaseo-ship` |
 | `upaseo-advisor` | 单 Agent 二次意见 | `/upaseo-advisor <question>` |
 | `upaseo-committee` | 双 Agent 根因分析 | `/upaseo-committee <problem>` |
 | `upaseo-handoff` | 任务完整移交 | `/upaseo-handoff <task>` |
@@ -19,24 +21,34 @@
 ## 安装
 
 ```bash
-# 将所有技能软链接到全局 skills 目录
+# 切换到项目根目录
 cd /Users/zcg/workroot/paseo-improved
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify using-paseo; do
+
+# 1. 软链接到本地 Agent 运行环境
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-paseo; do
   ln -sf "$(pwd)/$skill" ~/.agents/skills/$skill
+done
+
+# 2. 软链接到 Antigravity 全局配置环境，以便在 / 中进行调用
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-paseo; do
+  ln -sf "$(pwd)/$skill" ~/.gemini/config/skills/$skill
 done
 ```
 
 ## 快速使用
 
 ```bash
-# 完整仪式模式（Agent 自动判定）
+# 项目初始化与逆向（逆向生成已有的 stories, data_models, apis, modules 资产）
+/upaseo-init
+
+# 完整仪式模式进行开发迭代
 /using-paseo 实现用户登录功能
 
 # 强制快速模式
 /using-paseo --quick 修复登录按钮样式
 
-# 强制完整模式 + 每迭代独立 PR
-/using-paseo --full --pr-per-iteration 重构数据层架构
+# 手动触发 Ship 自动化发布
+/upaseo-ship
 ```
 
 ## 目录结构
@@ -56,8 +68,10 @@ paseo-improved/
 ├── upaseo-brainstorm/
 ├── upaseo-committee/
 ├── upaseo-handoff/
+├── upaseo-init/                    # 项目初始化与逆向整理技能
 ├── upaseo-loop/
 ├── upaseo-reviewer/
+├── upaseo-ship/                    # 自动化发布与清理技能
 ├── upaseo-simplify/
 ├── using-paseo/                    # 核心编排入口
 │   ├── SKILL.md
