@@ -1,0 +1,2 @@
+{"timestamp":"2026-05-20T05:00:00Z","session_id":"test-session-001","category":"command_error","failed_attempt":"运行 docker compose 时未指定命名空间","mitigation":"docker compose 命令必须强制指定 -p dingding"}
+{"timestamp":"2026-05-20T05:01:00Z","session_id":"test-session-001","category":"wrong_assumption","failed_attempt":"假设 npm test 会自动运行 lint","mitigation":"npm test 只运行 jest，lint 需要单独执行 npm run lint"}
