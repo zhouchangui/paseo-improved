@@ -11,7 +11,7 @@ FAIL=0
 pass() { echo "  ✅ $1"; PASS=$((PASS+1)); }
 fail() { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 
-SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify)
+SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship)
 ALL_SKILLS=("${SKILLS[@]}" using-paseo)
 
 echo "=== 1. YAML name 字段校验 ==="
@@ -62,9 +62,19 @@ if grep -q "story-updater" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "
 if grep -q "data_models.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含历史资产强注入"; else fail "SKILL.md 缺失历史资产强注入"; fi
 
 echo ""
+echo "=== 8. upaseo-ship 核心发布规程校验 ==="
+ship_roles="$ROOT/upaseo-ship/references/roles.md"
+ship_skill="$ROOT/upaseo-ship/SKILL.md"
+grep -q "release-auditor" "$ship_roles" 2>/dev/null && pass "角色 release-auditor 存在" || fail "角色 release-auditor 缺失"
+grep -q "cleaner" "$ship_roles" 2>/dev/null && pass "角色 cleaner 存在" || fail "角色 cleaner 缺失"
+grep -q "编译与测试阻断" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含编译校验与阻断" || fail "SKILL.md 缺失编译与测试阻断"
+grep -q "global-learnings.jsonl" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含全局教训同步共享" || fail "SKILL.md 缺失 learnings 全局同步"
+
+echo ""
 echo "========================================"
 echo "结果: $PASS 通过, $FAIL 失败"
 echo "========================================"
 
 if [ "$FAIL" -gt 0 ]; then exit 1; fi
+
 

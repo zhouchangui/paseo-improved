@@ -170,6 +170,25 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
 - 严禁跳过状态同步直接推进下一阶段。
 - **Auditor 报告格式**：不强制 JSON 格式。Auditor 用自然语言报告即可，但必须包含：验证结论（pass/fail）、关键日志片段、阻塞问题（若有）。Orchestrator 从语义中提取状态。
 
+### 3.6 手动发布与收尾交付阶段 (The Ship Phase - /upaseo-ship)
+
+为了闭合软件研发生命周期的最终交付环，在开发迭代全部完成、提交 PR 之后，系统支持由**用户手动敲入 `/upaseo-ship` 触发发布和环境清理工作**。此指令不在开发流中由 Agent 自动运行，而是作为用户受控的交付指令。其包含以下核心规程：
+
+1. **发布前置校验**：
+   - 检查主计划状态。只有当所有迭代都已标记为已完成 `[x]`，且本地 Git 状态同步无未提交修改时，方可进行。
+   - 终极构建阻断：执行 `npm run build` 和 `npm run test`（或对应命令）。如果出现编译报错或测试失败，立即阻断发布。
+2. **开发资产版本固化与 CHANGELOG 追加**：
+   - 扫描 `.paseo/story/` 下的 `data_models.md`、`apis.md`、`modules.md`。
+   - 将这三个文件中的 `* [Updated in Iter N]` 备注替换为正式发布标记（若指定了 `--version`，替换为 `* [Released in vX.Y.Z]`，否则默认使用本地日期 `* [Shipped on YYYY-MM-DD]`）。
+   - 将主计划的 `Progress Notes` 提炼为大纲，追加至项目根目录 `CHANGELOG.md` 顶部。
+3. **物理环境与分支安全清理**：
+   - 本地将 feature 分支安全合并入主干。
+   - 清理 worktree：如果本次开发使用了 `git worktree` 且未指定 `--keep-worktree`，自动运行 `git worktree remove` 安全回收磁盘物理空间。
+   - 安全删除本地已合入的临时 feature 开发分支（`git branch -d`），保持本地 `git branch` 清爽。
+4. **避障学习全局共享**：
+   - 将本项目本地 `.paseo/learnings.jsonl` 中的所有独特避障规则增量导入并合并至全局 `~/.paseo/global-learnings.jsonl`。
+   - 遵循完全去重过滤和上限 30 条的高密度原则，多项目共享血泪教训。
+
 ---
 
 ## 四、会话总结与避障学习
