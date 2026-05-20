@@ -60,13 +60,17 @@ grep -q "story-updater" "$roles" && pass "story-updater 角色规程" || fail "s
 
 echo ""
 echo "=== 7. 开发故事与历史资产目录机制校验 ==="
-for t in stories data_models apis modules; do
+for t in stories data_models apis modules architecture_constraints coding_standards; do
   if [ -f "$ROOT/using-paseo/references/${t}_template.md" ] || [ -f "$ROOT/upaseo-init/references/templates/${t}.md" ]; then pass "模板 $t 存在"; else fail "缺失模板 ${t}_template.md"; fi
 done
 if grep -q "mkdir -p.*\/story\|mkdir -p.*\.paseo\/story" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story 目录初始化"; else fail "SKILL.md 缺失 story 目录创建"; fi
 if grep -q "story-updater" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story-updater 自动更新资产机制"; else fail "SKILL.md 缺失 story-updater 机制"; fi
 if grep -q "stories.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 stories 资产历史强注入"; else fail "SKILL.md 缺失 stories 资产强注入"; fi
 if grep -q "data_models.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 data_models 资产历史强注入"; else fail "SKILL.md 缺失 data_models 资产强注入"; fi
+if grep -q "architecture_constraints.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 architecture_constraints 资产历史强注入"; else fail "SKILL.md 缺失 architecture_constraints 资产强注入"; fi
+if grep -q "coding_standards.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 coding_standards 资产历史强注入"; else fail "SKILL.md 缺失 coding_standards 资产强注入"; fi
+if grep -q "硬性读取顺序.*architecture_constraints.md.*coding_standards.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 明确子 Agent 必读架构约束与编码规范"; else fail "SKILL.md 缺失子 Agent 必读架构约束与编码规范"; fi
+if grep -q "早期 tool call.*architecture_constraints.md.*coding_standards.md" "$ROOT/upaseo-loop/SKILL.md" 2>/dev/null; then pass "upaseo-loop verifier 检查架构约束与编码规范读取"; else fail "upaseo-loop 缺失架构约束与编码规范读取合规检查"; fi
 
 echo ""
 echo "=== 8. upaseo-ship 核心发布规程校验 ==="
@@ -85,7 +89,7 @@ grep -q "story-architect" "$init_roles" 2>/dev/null && pass "角色 story-archit
 grep -q "asset-reverse-engineer" "$init_roles" 2>/dev/null && pass "角色 asset-reverse-engineer 存在" || fail "角色 asset-reverse-engineer 缺失"
 grep -q "目录" "$init_skill" 2>/dev/null && pass "SKILL.md 包含目录自愈初始化步骤" || fail "SKILL.md 缺失目录自愈初始化"
 grep -q "扫描\|逆向" "$init_skill" 2>/dev/null && pass "SKILL.md 包含 codebase 逆向扫描步骤" || fail "SKILL.md 缺失 codebase 逆向扫描"
-grep -q "stories.md.*data_models.md.*apis.md.*modules.md" "$init_skill" 2>/dev/null && pass "SKILL.md 包含四大资产写入规程" || fail "SKILL.md 缺失四大资产写入规程"
+grep -q "stories.md.*data_models.md.*apis.md.*modules.md.*architecture_constraints.md.*coding_standards.md" "$init_skill" 2>/dev/null && pass "SKILL.md 包含六大资产写入规程" || fail "SKILL.md 缺失六大资产写入规程"
 
 echo ""
 echo "========================================"
@@ -93,5 +97,3 @@ echo "结果: $PASS 通过, $FAIL 失败"
 echo "========================================"
 
 if [ "$FAIL" -gt 0 ]; then exit 1; fi
-
-

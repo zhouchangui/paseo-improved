@@ -12,7 +12,7 @@
 | `upaseo-brainstorm` | 脑暴收敛：极简方案设计 | 由 using-paseo 自动调用 |
 | `upaseo-simplify` | PR 前代码极致精简 | 由 using-paseo 自动调用 |
 | `upaseo-reviewer` | PR 前质量自审 | 由 using-paseo 自动调用 |
-| `upaseo-init` | 项目初始化：自动构建 `.paseo/` 结构并逆向扫描提炼四大资产 | `/upaseo-init` |
+| `upaseo-init` | 项目初始化：自动构建 `.paseo/` 结构并逆向扫描提炼六大资产 | `/upaseo-init` |
 | `upaseo-ship` | 自动化发布：合并迭代分支、清理工作区、固化历史资产版本与 CHANGELOG | `/upaseo-ship` |
 | `upaseo-advisor` | 单 Agent 二次意见 | `/upaseo-advisor <question>` |
 | `upaseo-committee` | 双 Agent 根因分析 | `/upaseo-committee <problem>` |
@@ -38,7 +38,7 @@ done
 ## 快速使用
 
 ```bash
-# 项目初始化与逆向（逆向生成已有的 stories, data_models, apis, modules 资产）
+# 项目初始化与逆向（逆向生成已有的 stories, data_models, apis, modules, architecture_constraints, coding_standards 资产）
 /upaseo-init
 
 # 完整仪式模式进行开发迭代

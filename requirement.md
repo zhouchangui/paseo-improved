@@ -136,6 +136,8 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
       data_models.md       # 数据结构与表结构资产
       apis.md              # 核心 API 与接口资产
       modules.md           # 包、模块职责与页面路由拓扑资产
+      architecture_constraints.md  # 架构约束、依赖边界与运行时约束资产
+      coding_standards.md          # 编码规范、工程约定与验证命令资产
 ```
 使用 `mkdir -p` 确保幂等创建，已存在时不报错。若 story 下资产文件不存在，从模板自愈初始化。
 
@@ -145,19 +147,19 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
   - 主计划文件绝对路径
   - 当前迭代设计与任务文档绝对路径
   - 避障学习记录路径（`.paseo/learnings.jsonl`）
-  - **核心开发资产文档路径**：`.paseo/story/` 下关联资产文档的绝对路径（如 `stories.md`、`data_models.md` 等）
-- **精简传递策略**：Orchestrator 在 initialPrompt 中内联传递**关键摘要**（迭代目标 + 验证标准，不超过 5 行），同时附带文件绝对路径供子 Agent 需要完整细节时读取。不强制子 Agent 一次性读取全部文件。
-- 子 Agent 启动后**必须先读取迭代设计与任务文档**（这是最小必要上下文），并根据其改动范围，读取关联的历史开发资产文档。
-- **合规检查**：在 verifier prompt 中增加一条检查——确认 worker 的早期 tool call 中包含 `view_file` 读取设计与任务文档，若缺失则判定为不合规。
+  - **核心开发资产文档路径**：`.paseo/story/` 下关联资产文档的绝对路径（如 `stories.md`、`data_models.md`、`architecture_constraints.md`、`coding_standards.md` 等）
+- **精简传递策略**：Orchestrator 在 initialPrompt 中内联传递**关键摘要**（迭代目标 + 验证标准，不超过 5 行），同时附带文件绝对路径供子 Agent 读取。迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 是所有实现类子 Agent 的强制启动上下文。
+- 子 Agent 启动后**必须先读取迭代设计与任务文档、架构约束资产和编码规范资产**，并根据其改动范围，继续读取关联的历史开发资产文档。
+- **合规检查**：在 verifier prompt 中增加一条检查——确认 worker 的早期 tool call 中包含 `view_file` 读取设计与任务文档、`architecture_constraints.md` 和 `coding_standards.md`，若任一缺失则判定为不合规。
 
 ### 3.4 开发故事与历史资产目录机制 (Asset Map & Story Closed-Loop)
 
 为了在漫长且多迭代的开发中保持项目架构、接口、数据模型以及功能用例的一致性，彻底避免“重复造轮子”和旧组件架构腐化，Orchestrator 必须强制执行以下历史资产的闭环管控机制：
 
-1. **模板自愈初始化**：在 Step 0 偏好设置检查与目录初始化中，自动创建 `<项目根目录>/.paseo/story/` 目录。若对应的 `stories.md`、`data_models.md`、`apis.md`、`modules.md` 文件不存在，自动使用 `using-paseo/references/` 下的模板文件进行复制和自愈。
+1. **模板自愈初始化**：在 Step 0 偏好设置检查与目录初始化中，自动创建 `<项目根目录>/.paseo/story/` 目录。若对应的 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md`、`coding_standards.md` 文件不存在，自动使用 `using-paseo/references/` 下的模板文件进行复制和自愈。
 2. **前置强注入 (Asset Injection)**：
    - 在 Step 5.B 派生子 Agent 驱动实现时，主 Agent 在 `initialPrompt` 中**必须以绝对路径形式注入 `.paseo/story/` 下关联资产文件的地址**。
-   - 强约束：子 Agent 必须将“**读取关联资产文档**”作为启动后极高优先级的前置规程动作（若涉及功能故事修改首步读取 `stories.md`；若本次迭代包含 API 修改则首步读取 `apis.md`；若涉及数据结构修改则首步读取 `data_models.md`，以此类推）。
+   - 强约束：子 Agent 必须将“**读取迭代设计文档、架构约束资产和编码规范资产**”作为启动后第一规程动作；随后再根据改动范围读取关联业务资产（若涉及功能故事修改读取 `stories.md`；若本次迭代包含 API 修改读取 `apis.md`；若涉及数据结构修改读取 `data_models.md`；若涉及包结构或页面路由读取 `modules.md`，以此类推）。
 3. **完工后自动刷新 (Auto-refresh on Completion)**：
    - 在 Step 5.C 子 Agent 完工通知与状态同步阶段，Orchestrator 在将主计划状态勾选为 `[x]` 之后，**必须紧接着执行一个资产审查与刷新步骤**。
    - 主 Agent（或派生的 `story-updater` 角色）分析子 Agent 本轮迭代的所有变更（代码 diff 和受影响文件）。
@@ -179,7 +181,7 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
    - 检查主计划状态。只有当所有迭代都已标记为已完成 `[x]`，且本地 Git 状态同步无未提交修改时，方可进行。
    - 终极构建阻断：执行 `npm run build` 和 `npm run test`（或对应命令）。如果出现编译报错或测试失败，立即阻断发布。
 2. **开发资产版本固化与 CHANGELOG 追加**：
-   - 扫描 `.paseo/story/` 下的 `stories.md`、`data_models.md`、`apis.md`、`modules.md` 四个历史资产文件。
+   - 扫描 `.paseo/story/` 下的 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md`、`coding_standards.md` 六个历史资产文件。
    - 将这些文件中的所有 `* [Updated in Iter N]` 备注替换为正式发布标记（若指定了 `--version`，替换为 `* [Released in vX.Y.Z]`，否则默认使用本地日期 `* [Shipped on YYYY-MM-DD]`）。
    - 将主计划的 `Progress Notes` 提炼为大纲，追加至项目根目录 `CHANGELOG.md` 顶部。
 3. **物理环境与分支安全清理**：
@@ -194,9 +196,9 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
 
 当现有（或全新）项目需要接入 `upaseo` 开发故事与资产闭环工作流时，支持由**用户手动敲入 `/upaseo-init` 触发项目资产的初始化与逆向整理**。该指令不属于常规迭代内流，而是作为系统准入性指令。其包含以下核心规程：
 
-1. **幂等目录自愈初始化**：一键创建 `.paseo/story/` 等目录，在模板缺失时自动自愈装载四大资产空模板。
+1. **幂等目录自愈初始化**：一键创建 `.paseo/story/` 等目录，在模板缺失时自动自愈装载六大资产空模板。
 2. **已有代码库逆向扫描**：在**绝对只读安全红线**下分析 codebase，检测项目技术栈及主要代码路由目录。
-3. **四大历史资产整理与 Legacy 转换**：将扫描提炼出的系统已实现用例、数据模型、API 接口和模块拓扑分别注入 `stories.md`、`data_models.md`、`apis.md` 和 `modules.md`。为明确表示是遗留成熟功能，所有条目以 `* [Legacy Asset]` 或 `* [Released in v0.0.0]` 前缀开头。
+3. **六大历史资产整理与 Legacy 转换**：将扫描提炼出的系统已实现用例、数据模型、API 接口、模块拓扑、架构约束和编码规范分别注入 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。为明确表示是遗留成熟功能，所有条目以 `* [Legacy Asset]` 或 `* [Released in v0.0.0]` 前缀开头。
 4. **资产地图报告打印**：向用户展示高密度资产统计报告，明确确立 Source of Truth。
 
 
