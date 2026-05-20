@@ -70,6 +70,18 @@ Step 0.2: 自主判定执行模式 (quick / full)
 1. 读取 `~/.paseo/orchestration-preferences.json` 以获取底层 Agent 的 Provider 分发。
 2. **UI 设计 Gemini 专属约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider **强制限定为 `gemini` 系列模型**。无 Gemini 可用时，暂停并通知用户，不得降级。
 3. **自动初始化 `.paseo/` 目录**：运行 `mkdir -p <项目根目录>/.paseo/plans` 确保目录结构存在。
+4. **Paseo 命令行自动检测与初始化安装**：
+   - 检查当前系统 `PATH` 中是否能成功执行 `paseo`（通过 `which paseo` 或运行 `paseo --version`）。
+   - 若未在 `PATH` 中找到：
+     - 主动在默认桌面端安装路径下搜寻内置 CLI 可执行文件：
+       - **macOS**: `/Applications/Paseo.app/Contents/Resources/bin/paseo`
+       - **Linux**: `/opt/Paseo/resources/bin/paseo`
+       - **Windows**: `C:\Program Files\Paseo\resources\bin\paseo.cmd`
+     - 若成功搜寻到内置 CLI：
+       - 检测并创建本地用户执行目录 `mkdir -p ~/.local/bin`。
+       - **自动在 `~/.local/bin/paseo` 创建软链接**指向搜寻到的内置 CLI 物理路径（Windows 下自动生成对应的 `.cmd` 启动脚本/Trampoline）。
+       - 检查 `~/.local/bin` 是否已在当前 `PATH` 环境变量中。若不在，主动通过当前 Shell 运行时直接 `export PATH="$HOME/.local/bin:$PATH"`，并以高亮提示用户将 `export PATH="$HOME/.local/bin:$PATH"` 追加到他们的 shell 配置（如 `~/.zshrc` 或 `~/.bashrc`）中，实现完美的开箱即用。
+     - 若最终无法找到任何内置或全局 CLI，打印醒目警告提示用户先去下载并安装 Paseo 桌面端客户端。
 
 ### 0.1 全局会话避障前置读取 (Hard Mitigation Precheck) ⚠️ 硬性规定
 
