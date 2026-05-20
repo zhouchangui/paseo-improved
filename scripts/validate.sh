@@ -11,7 +11,7 @@ FAIL=0
 pass() { echo "  ✅ $1"; PASS=$((PASS+1)); }
 fail() { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 
-SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship)
+SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init)
 ALL_SKILLS=("${SKILLS[@]}" using-paseo)
 
 echo "=== 1. YAML name 字段校验 ==="
@@ -54,12 +54,13 @@ grep -q "story-updater" "$roles" && pass "story-updater 角色规程" || fail "s
 
 echo ""
 echo "=== 7. 开发故事与历史资产目录机制校验 ==="
-for t in data_models apis modules; do
-  if [ -f "$ROOT/using-paseo/references/${t}_template.md" ]; then pass "模板 $t 存在"; else fail "缺失模板 ${t}_template.md"; fi
+for t in stories data_models apis modules; do
+  if [ -f "$ROOT/using-paseo/references/${t}_template.md" ] || [ -f "$ROOT/upaseo-init/references/templates/${t}.md" ]; then pass "模板 $t 存在"; else fail "缺失模板 ${t}_template.md"; fi
 done
 if grep -q "mkdir -p.*\/story\|mkdir -p.*\.paseo\/story" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story 目录初始化"; else fail "SKILL.md 缺失 story 目录创建"; fi
 if grep -q "story-updater" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story-updater 自动更新资产机制"; else fail "SKILL.md 缺失 story-updater 机制"; fi
-if grep -q "data_models.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含历史资产强注入"; else fail "SKILL.md 缺失历史资产强注入"; fi
+if grep -q "stories.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 stories 资产历史强注入"; else fail "SKILL.md 缺失 stories 资产强注入"; fi
+if grep -q "data_models.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 data_models 资产历史强注入"; else fail "SKILL.md 缺失 data_models 资产强注入"; fi
 
 echo ""
 echo "=== 8. upaseo-ship 核心发布规程校验 ==="
@@ -69,6 +70,16 @@ grep -q "release-auditor" "$ship_roles" 2>/dev/null && pass "角色 release-audi
 grep -q "cleaner" "$ship_roles" 2>/dev/null && pass "角色 cleaner 存在" || fail "角色 cleaner 缺失"
 grep -q "编译与测试阻断" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含编译校验与阻断" || fail "SKILL.md 缺失编译与测试阻断"
 grep -q "global-learnings.jsonl" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含全局教训同步共享" || fail "SKILL.md 缺失 learnings 全局同步"
+
+echo ""
+echo "=== 9. upaseo-init 核心初始化与逆向规程校验 ==="
+init_roles="$ROOT/upaseo-init/references/roles.md"
+init_skill="$ROOT/upaseo-init/SKILL.md"
+grep -q "story-architect" "$init_roles" 2>/dev/null && pass "角色 story-architect 存在" || fail "角色 story-architect 缺失"
+grep -q "asset-reverse-engineer" "$init_roles" 2>/dev/null && pass "角色 asset-reverse-engineer 存在" || fail "角色 asset-reverse-engineer 缺失"
+grep -q "目录" "$init_skill" 2>/dev/null && pass "SKILL.md 包含目录自愈初始化步骤" || fail "SKILL.md 缺失目录自愈初始化"
+grep -q "扫描\|逆向" "$init_skill" 2>/dev/null && pass "SKILL.md 包含 codebase 逆向扫描步骤" || fail "SKILL.md 缺失 codebase 逆向扫描"
+grep -q "stories.md.*data_models.md.*apis.md.*modules.md" "$init_skill" 2>/dev/null && pass "SKILL.md 包含四大资产写入规程" || fail "SKILL.md 缺失四大资产写入规程"
 
 echo ""
 echo "========================================"

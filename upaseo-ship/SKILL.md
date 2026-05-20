@@ -50,8 +50,8 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
 ### Step 2: 历史开发资产固化与 CHANGELOG 追加 (Story Release & Changelog)
 由 `release-auditor` 角色主导：
 1. **资产版本号转换 (Story Solidification)**：
-   - 扫描项目 `.paseo/story/` 目录下的三个历史资产文件：`data_models.md`、`apis.md` 和 `modules.md`。
-   - 将这三个文档中，所有在本次开发会话中由主 Agent 追加的以 `* [Updated in Iter N]` 为前缀的描述备注，增量更新替换为：
+   - 扫描项目 `.paseo/story/` 目录下的四个历史资产文件：`stories.md`、`data_models.md`、`apis.md` 和 `modules.md`。
+   - 将这四个文档中，所有在本次开发会话中由主 Agent 追加的以 `* [Updated in Iter N]` 为前缀的描述备注，增量更新替换为：
      - 若指定了 `--version <vX.Y.Z>`，替换为 `* [Released in vX.Y.Z]`
      - 若未指定版本号，替换为 `* [Shipped on YYYY-MM-DD]`（用当前本地日期替换）
    - 在资产文档底部的 `资产更新日志 (Asset Update Log)` 中，增量追加一行以发布版本或日期为名称的归档日志。

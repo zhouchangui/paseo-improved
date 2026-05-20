@@ -1,0 +1,75 @@
+---
+name: upaseo-init
+description: >-
+  项目初始化与历史开发故事逆向整理技能。自动创建 .paseo 目录树，逆向分析已有 codebase，
+  提炼并生成包含用户故事(stories)、数据模型(data_models)、公共API(apis)及模块页面路由(modules)
+  在内的四大历史核心开发资产，从而为后续 Agent 迭代式开发提供高一致性上下文。
+user-invocable: true
+argument-hint: "[--force] [--path <dir>]"
+---
+
+# Upaseo Init (项目初始化与历史资产逆向整理技能)
+
+本技能为 `upaseo` 套件的初始构建器和遗留 codebase 逆向整理器。当您想在任何现有（或全新）的项目中接入 `upaseo` 规范化迭代开发流程时，**由您手动输入 `/upaseo-init` 触发本技能**。
+
+它能帮助您自动一键建立 `.paseo/` 目录结构，并通过只读分析当前项目 codebase，逆向提炼并生成包含 **`stories.md` (新增用户故事资产)** 在内的四大核心历史开发资产。这极大地降低了老项目接入 `upaseo` 开发故事闭环机制的录入成本，为后续 Agent 的无偏迭代奠定完美的架构源头 (Source of Truth)。
+
+---
+
+## 1. 预备知识与参数
+1. 角色职责规范定义在 `references/roles.md`。
+2. 运行此命令时，默认会对当前工作目录进行处理，您也可以通过参数进行精细控制：
+   - `--path <dir>`：指定待初始化的项目绝对路径，默认采用当前执行目录。
+   - `--force`：若 `.paseo/` 目录已存在，强制覆盖已有的资产文件。如果不加该参数，系统会进行幂等创建，不会覆盖已有资产。
+
+---
+
+## 2. 初始化与逆向工程详细规程 (Init Steps)
+
+### Step 1: 幂等目录初始化与模板自愈 (Directory & Template Healing)
+由 `story-architect` 角色主导：
+1. **目录树构建**：
+   - 在目标项目根目录下创建 `.paseo/` 文件夹。
+   - 在其下创建子目录：`.paseo/story/`（资产库）、`.paseo/plans/`（迭代计划）以及 `.paseo/learnings/`（避障学习记录）。
+   - 使用 `mkdir -p` 确保整个创建过程的幂等性与零报错。
+2. **默认模板自愈**：
+   - 检查 `.paseo/story/` 下是否存在 `stories.md`、`data_models.md`、`apis.md` 和 `modules.md`。
+   - 对任何缺失的资产文件，自动从本技能的 `references/templates/` 目录中将对应的默认初始模板复制或写入到该项目下，确保资产基座完整。
+
+### Step 2: 已有 Codebase 只读扫描与技术栈识别 (Codebase Scanning)
+由 `asset-reverse-engineer` 角色主导：
+1. **技术栈感知**：
+   - 扫描根目录下的关键标识文件（如 `package.json`、`requirements.txt`、`pyproject.toml`、`go.mod`、`pom.xml` 等）。
+   - 识别出该项目的主要开发语言（JavaScript/TypeScript、Python、Go、Java 等）及使用的核心 Web 框架（Express, NestJS, FastAPI, Django, Gin 等）。
+2. **核心代码结构扫描**：
+   - 扫描项目主要源文件目录（如 `src/`、`app/`、`lib/`、`routes/`、`models/`、`controllers/`）。
+   - 收集所有的文件名、目录层次以及用于定义接口和数据结构的代码块。
+   - **安全红线**：本步骤仅通过只读工具（如 `list_dir`、`grep_search`、`view_file`）检索结构与细节，**绝不修改项目任何现有代码**。
+
+### Step 3: 四大核心历史开发资产逆向整理 (Asset Engineering)
+由 `asset-reverse-engineer` 角色主导。将 Step 2 扫描出来的系统结构增量写入 `.paseo/story/` 下的四大资产文档中。为了明确标示出系统原有的成熟历史资产，**所有逆向整理出来的描述条目必须统一以 `* [Legacy Asset]` 或 `* [Released in v0.0.0]` 前缀开头。**
+
+具体逆向提炼规则为：
+1. **Modules 资产逆向 (modules.md)**：
+   - 将检测到的核心目录与包结构整理为树状拓扑图。
+   - 提炼核心模块职责（例如：`src/components/` 负责通用 UI 组件；`src/routes/` 负责前端路由/API 路由分发）。
+   - 标注 Legacy 包结构。
+2. **DataModels 资产逆向 (data_models.md)**：
+   - 寻找定义数据库 Schema 的文件（如 ORM 定义、类型定义、SQL 建表语句）。
+   - 提取出系统的实体模型、关键字段、数据库表结构及各实体间的关联关系。
+   - 将它们格式化为清晰的数据字典或 markdown 表格。
+3. **APIs 资产逆向 (apis.md)**：
+   - 寻找路由定义和路由分发文件。
+   - 整理出系统中所有已经实现的公共 API 接口（列出 Method, Path, 描述），写入 API 映射资产中。
+4. **Stories 资产逆向 (stories.md) — 新增核心步骤**：
+   - 结合扫描到的 API 路由、前端页面包以及模块职责，自顶向下逆向归纳并提炼出系统当前已具备的**用户故事大纲**与**端到端功能用例**（例如：“用户身份验证与令牌鉴权故事”、“商品检索与详情展示功能”等）。
+   - 归纳总结项目原有的功能地图，便于后续 Agent 开发时全局把控，彻底杜绝逻辑割裂与旧功能的破坏。
+
+### Step 4: 结果展示与资产地图宣告 (Result Announcement)
+由 `story-architect` 角色主导：
+1. **报告打印**：
+   - 在控制台中向用户打印一份内容详实、结构精美的 **`upaseo 项目资产初始化大纲报告`**。
+   - 报告需包含：扫描到的文件及目录总数、识别的技术栈、逆向提炼出的用户故事数、公共 API 路由数、数据表数以及模块节点数。
+2. **Source of Truth 确立**：
+   - 告知用户四大资产文件的绝对路径，并提示用户这些文件已成为该项目最真实的资产蓝图（Source of Truth）。
+   - 宣告项目已完美接入 `upaseo` 高一致性闭环开发工作流，接下来便可愉快地使用 `/using-paseo` 开始正式的需求迭代！
