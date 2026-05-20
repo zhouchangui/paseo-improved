@@ -117,3 +117,21 @@ Debug order:
 3. `curl -s localhost:6767/api/health` if the CLI itself is suspect.
 
 **Never restart the daemon without explicit user approval** — it kills every running agent, including, often, the one asking.
+
+## 避障学习系统 (Learnings)
+
+所有 upaseo 技能在启动时应检查项目根目录下的 `.paseo/learnings.jsonl`。若存在，`view_file` 读取并将历史避障规则作为本次执行的硬约束。
+
+文件格式为 JSON Lines，每条记录：
+```json
+{"timestamp":"<ISO8601>","session_id":"<conversation-id>","category":"<command_error|wrong_assumption|tool_misuse|design_flaw>","failed_attempt":"<简述>","mitigation":"<应该怎么做>"}
+```
+
+容量上限 30 条。超过时由 Orchestrator（`using-paseo`）精炼合并旧条目。写入前去重。
+
+## 异常恢复 (Resumability)
+
+当 Agent 执行中断后重新启动时：
+1. 检查 `.paseo/plans/` 目录下是否有包含 `[ ]` 未完成标记的计划文件。
+2. 若有，读取计划文件和对应的迭代设计文档，从最近一个未完成的步骤恢复。
+3. 完整的异常恢复流程参见 `using-paseo` 技能的"异常恢复"章节。

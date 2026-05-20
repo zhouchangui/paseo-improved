@@ -19,7 +19,9 @@ argument-hint: "[--quick|--full] [--autopilot|--gate] [--worktree] [--pr-per-ite
 
 ## 预备知识与依赖
 1. 深入阅读全局 `upaseo` 技能以了解 Worktree、Agent 等基本控制逻辑。
-2. 角色职责规范定义在相对路径的 `references/roles.md` 文件中。
+2. 角色职责规范定义在 `references/roles.md`。
+3. 快速模式完整流程参见 `references/quick-mode.md`。
+4. 参数速查与自主判定规则参见 `references/params.md`。
 
 ---
 
@@ -100,6 +102,8 @@ Step 0.2: 自主判定执行模式 (quick / full)
 | 快速模式 | 自动判定 / `--quick` 强制 | 跳过脑暴，单迭代直接实现 → 日志验证 → 用户确认 → 提交 |
 
 **Agent 选择模式后，必须在执行前向用户简要说明判定理由（一句话），用户可随时纠正。**
+
+> **快速模式详细流程**参见 `references/quick-mode.md`。**参数与判定规则完整定义**参见 `references/params.md`。
 
 ---
 

@@ -22,6 +22,12 @@ description: 本地脑暴与方案设计技能。融合了 Karpathy 极简原则
 
 ---
 
+## 前置避障读取
+
+在执行脑暴流程前，检查当前项目根目录下是否存在 `.paseo/learnings.jsonl`。若存在，使用 `view_file` 读取并提炼避障规则，将规则作为后续方案设计的硬约束——任何方案不得违反历史教训中的规则。若文件不存在则跳过。
+
+---
+
 ## 脑暴执行流程 (Discover -> Propose -> Converge -> Capture)
 
 ### 1. 发现阶段 (Discover)

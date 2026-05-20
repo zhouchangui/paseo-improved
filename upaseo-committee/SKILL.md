@@ -36,6 +36,19 @@ Override only when the user explicitly asks for different members.
 - **Trust the wait.** Do not poll, send hurry-ups, or interrupt. GPT-5.4 can reason 15–30 minutes; Opus does extended thinking. Long waits mean it found something worth thinking about.
 - **You are the middleman.** Drive plan → implement → review without yielding to the user, except for divergences that need their call.
 
+## 前置避障读取
+
+在构建 problem-level prompt 前，检查当前项目根目录下是否存在 `.paseo/learnings.jsonl`。若存在，使用 `view_file` 读取并提炼避障规则，作为 committee 成员 prompt 的前缀：
+
+```
+[避障规则 - 来自历史教训，分析时必须纳入考量]
+- <规则1>
+- ...
+[避障规则结束]
+```
+
+若文件不存在则跳过。
+
 ## Phase 1: Plan
 
 Write a problem-level prompt:
@@ -46,6 +59,7 @@ Write a problem-level prompt:
 - What you tried and why it failed
 - Explicit: "do root cause analysis"
 - Explicit: "use think-harder — state assumptions, ask why three levels deep, check whether you're patching a symptom or removing the problem"
+- **上下文文件**：若有主计划文件或迭代设计文档，在 prompt 中附带绝对路径，要求 committee 成员首步使用 `view_file` 读取后再开始分析。
 
 Create both agents in parallel via Paseo with `[Committee] <task>` titles and the same prompt. Wait for both — not just whichever finishes first.
 
@@ -79,3 +93,5 @@ Send the diff to the committee:
 Apply feedback yourself, or send to the impl agent. Repeat 2 → 3 until consensus.
 
 After ~10 iterations without convergence, start a fresh committee with the full history of what was tried — the current committee's context may have drifted too far.
+
+**完工汇报**：review 完成后向 Orchestrator 报告 committee 最终结论，包含 status（consensus/diverged）、一句话 summary、以及关键分歧点（若有）。
