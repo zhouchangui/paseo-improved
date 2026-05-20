@@ -148,8 +148,8 @@ Step 0.2: 自主判定执行模式 (quick / full)
 ### 5. 迭代执行大循环 (The Iteration Loop)
 针对路线图中未完成的每一个迭代（N），必须依次严密执行以下子流程：
 
-#### A. 创建单迭代设计与验证文档
-在 `.paseo/plans/<slug>/iter_<N>_design_tasks.md` 创建独立的设计文档。必须包含以下段落：
+#### A. 创建单迭代“设计与任务”文档
+在 `.paseo/plans/<slug>/iter_<N>_design_tasks.md` 创建独立的设计与任务文档（在极简工作流中，技术设计与具体任务融为一体）。该文档必须包含以下段落：
 1. **迭代目标 (Iteration Goal)**：清晰描述本轮增量迭代要达到的具体效果。
 2. **极简技术方案 (Surgical Design)**：遵循极简主义设计，不留任何冗余接口。
 3. **验证计划 (Verification Plan)**：
