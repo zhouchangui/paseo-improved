@@ -31,7 +31,7 @@ argument-hint: "[--force] [--path <dir>]"
 由 `story-architect` 角色主导：
 1. **目录树构建**：
    - 在目标项目根目录下创建 `.paseo/` 文件夹。
-   - 在其下创建子目录：`.paseo/story/`（资产库）、`.paseo/plans/`（迭代计划）以及 `.paseo/learnings/`（避障学习记录）。
+   - 在其下创建子目录：`.paseo/story/`（资产库）和 `.paseo/plans/`（迭代计划），并在需要记录避障经验时使用项目级文件 `.paseo/learnings.jsonl`。
    - 使用 `mkdir -p` 确保整个创建过程的幂等性与零报错。
 2. **默认模板自愈**：
    - 检查 `.paseo/story/` 下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。

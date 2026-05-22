@@ -11,14 +11,14 @@ argument-hint: "[--quick|--full] [--autopilot|--gate] [--worktree] [--pr-per-ite
 
 # Using Paseo (核心开发工作流技能)
 
-本技能为您专属的核心开发编排器。它将一项任务在完全本地化的 `upaseo` 环境下驱动，严格通过：**避障前置 → 自主复杂度判定 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代独立设计文档与验证定义 → 自主推进/用户网关 → 强制 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
+本技能为唯一的完整开发工作流入口。它将一项任务在完全本地化的 `upaseo` 基座上驱动，严格通过：**避障前置 → 自主复杂度判定 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 强制 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
 
 **User's request:** $ARGUMENTS
 
 ---
 
 ## 预备知识与依赖
-1. 深入阅读全局 `upaseo` 技能以了解 Worktree、Agent 等基本控制逻辑。
+1. 深入阅读全局 `upaseo` 基座参考以了解 Worktree、Agent、CLI 与 Provider 偏好等底层控制逻辑。`upaseo` 只提供低层能力，不承载完整开发流程。
 2. 角色职责规范定义在 `references/roles.md`。
 3. 快速模式完整流程参见 `references/quick-mode.md`。
 4. 参数速查与自主判定规则参见 `references/params.md`。
@@ -32,7 +32,7 @@ Step 0: 偏好读取 + .paseo/ 目录初始化
 Step 0.1: 前置读取 .paseo/learnings.jsonl (避障)
 Step 0.2: 自主判定执行模式 (quick / full)
   │
-  ├── [quick 模式] ──> 单迭代直接实现 → 验证 → 提交
+  ├── [quick 模式] ──> 最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 验证 → 提交
   │
   └── [full 模式]
         │
@@ -42,7 +42,10 @@ Step 0.2: 自主判定执行模式 (quick / full)
        ┌──────────────────── 下一个迭代 ────────────────────────┘
        │
        ▼
-      创建迭代设计文档 (iter_N_design_tasks.md)
+      创建迭代设计草案 (iter_N_design_tasks.md)
+       │
+       ▼
+      迭代计划评审会 (架构/功能/测试 1-2 轮博弈修正)
        │
        ▼
       派生子 Agent (内联摘要 + 绝对路径) ──> upaseo-loop 实现
@@ -80,9 +83,9 @@ Step 0.2: 自主判定执行模式 (quick / full)
        - **Linux**: `/opt/Paseo/resources/bin/paseo`
        - **Windows**: `C:\Program Files\Paseo\resources\bin\paseo.cmd`
      - 若成功搜寻到内置 CLI：
-       - 检测并创建本地用户执行目录 `mkdir -p ~/.local/bin`。
-       - **自动在 `~/.local/bin/paseo` 创建软链接**指向搜寻到的内置 CLI 物理路径（Windows 下自动生成对应的 `.cmd` 启动脚本/Trampoline）。
-       - 检查 `~/.local/bin` 是否已在当前 `PATH` 环境变量中。若不在，主动通过当前 Shell 运行时直接 `export PATH="$HOME/.local/bin:$PATH"`，并以高亮提示用户将 `export PATH="$HOME/.local/bin:$PATH"` 追加到他们的 shell 配置（如 `~/.zshrc` 或 `~/.bashrc`）中，实现完美的开箱即用。
+       - 检测本地用户执行目录 `~/.local/bin` 是否存在；若不存在，可提示用户运行 `mkdir -p ~/.local/bin`。
+       - **不得静默创建软链接**。必须向用户展示建议命令，由用户确认后再在 `~/.local/bin/paseo` 创建软链接指向内置 CLI 物理路径（Windows 下为对应的 `.cmd` 启动脚本/Trampoline）。
+       - 检查 `~/.local/bin` 是否已在当前 `PATH` 环境变量中。若不在，可在本次会话运行时临时 `export PATH="$HOME/.local/bin:$PATH"`，并提示用户将该 export 追加到 shell 配置（如 `~/.zshrc` 或 `~/.bashrc`）。
      - 若最终无法找到任何内置或全局 CLI，打印醒目警告提示用户先去下载并安装 Paseo 桌面端客户端。
 
 ### 0.1 全局会话避障前置读取 (Hard Mitigation Precheck) ⚠️ 硬性规定
@@ -112,8 +115,8 @@ Step 0.2: 自主判定执行模式 (quick / full)
 
 | 模式 | 触发方式 | 流程 |
 |:---|:---|:---|
-| 完整仪式 | 自动判定 / `--full` 强制 | 脑暴 → 迭代拆分 → Loop 实现 → Gate/Auto → 自审 → PR |
-| 快速模式 | 自动判定 / `--quick` 强制 | 跳过脑暴，单迭代直接实现 → 日志验证 → 用户确认 → 提交 |
+| 完整仪式 | 自动判定 / `--full` 强制 | 脑暴 → 迭代拆分 → 每迭代计划评审会 → Loop 实现 → Gate/Auto → 自审 → PR |
+| 快速模式 | 自动判定 / `--quick` 强制 | 跳过脑暴，最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 日志验证 → 用户确认 → 提交 |
 
 **Agent 选择模式后，必须在执行前向用户简要说明判定理由（一句话），用户可随时纠正。**
 
@@ -134,7 +137,7 @@ Step 0.2: 自主判定执行模式 (quick / full)
 - **快速模式下跳过此步骤。**
 
 ### 4. 增量迭代计划制定 (Incremental Iteration Planning)
-方案确定后，Orchestrator 必须将整个技术方案切分为数个紧凑的**增量迭代（Incremental Iterations）**。
+方案确定后，Orchestrator 必须将整个技术方案切分为数个紧凑的**增量迭代（Incremental Iterations）**。此时只允许形成路线图级别的迭代假设，具体功能设计和验收标准必须在每个迭代开始前通过“迭代计划评审会”定稿。
 在 `.paseo/plans/<slug>.md` 写入整体路线图（Source of Truth），标记 Iterations：
 ```markdown
 ## 迭代路线图
@@ -145,13 +148,13 @@ Step 0.2: 自主判定执行模式 (quick / full)
 (由 Orchestrator 在每个迭代完工后追加)
 ```
 
-> **快速模式**下只有 1 个迭代，无需路线图文件，直接创建迭代设计文档即可。
+> **快速模式**下只有 1 个迭代，但仍必须创建最小主计划文件 `.paseo/plans/<slug>.md`，用于恢复、状态审计和 `/upaseo-ship` 发布前校验。
 
 ### 5. 迭代执行大循环 (The Iteration Loop)
 针对路线图中未完成的每一个迭代（N），必须依次严密执行以下子流程：
 
-#### A. 创建单迭代“设计与任务”文档
-在 `.paseo/plans/<slug>/iter_<N>_design_tasks.md` 创建独立的设计与任务文档（在极简工作流中，技术设计与具体任务融为一体）。该文档必须包含以下段落：
+#### A. 创建单迭代“设计与任务”草案
+在 `.paseo/plans/<slug>/iter_<N>_design_tasks.md` 创建独立的设计与任务文档草案（在极简工作流中，技术设计与具体任务融为一体）。该文档必须包含以下段落：
 1. **迭代目标 (Iteration Goal)**：清晰描述本轮增量迭代要达到的具体效果。
 2. **极简技术方案 (Surgical Design)**：遵循极简主义设计，不留任何冗余接口。
 3. **验证计划 (Verification Plan)**：
@@ -161,7 +164,20 @@ Step 0.2: 自主判定执行模式 (quick / full)
      - `manual` 或 `agent-run`（通过操作电脑，运行特定脚本或查看终端输出验证）。
    - **用户手动验证具体步骤**：为用户编写一行明晰、无门槛的手动验证命令或操作步骤。
 
-#### B. 强制使用 `upaseo-loop` 驱动实现（含精简上下文传递）
+#### B. 迭代计划评审会（架构/功能/测试博弈，硬性规定）
+
+在任何实现类子 Agent 启动前，Orchestrator 必须围绕本轮 `iter_<N>_design_tasks.md` 草案组织 1-2 轮计划评审会。评审会可以派生只读子 Agent，也可以由主 Agent 明确扮演以下角色，但必须在计划文件中记录各角色意见与修正结论：
+1. **architecture-designer**：审查架构边界、模块归属、依赖方向、数据流和是否违反 `architecture_constraints.md`。
+2. **feature-designer**：审查用户故事、功能边界、交互/业务行为、与既有 `stories.md` 和 `modules.md` 的一致性。
+3. **test-strategist**：审查验收标准是否可执行、日志/测试/browser/manual 验证路径是否闭环、失败条件是否明确。
+
+评审流程：
+1. **Round 1**：三个角色分别基于迭代草案、`architecture_constraints.md`、`coding_standards.md` 以及相关业务资产提出阻塞问题、风险和具体修改建议。
+2. **修正草案**：Orchestrator 将被采纳的意见写回 `iter_<N>_design_tasks.md`，至少补齐功能边界、架构决策、验收标准、测试证据和不做事项。
+3. **Round 2（条件触发）**：若 Round 1 存在阻塞问题、验收不可执行、架构边界不清或角色意见冲突，必须再进行一轮复审；若仍无法收敛，暂停并向用户提交争议点。
+4. **定稿门槛**：计划文件必须追加 `Design Council Log` 段落，记录每个角色的关键意见、采纳/拒绝理由、最终验收标准。没有该段落或存在未解决阻塞项时，严禁进入实现。
+
+#### C. 强制使用 `upaseo-loop` 驱动实现（含精简上下文传递）
 
 **派生子 Agent 的上下文传递规则（硬性规定）：**
 
@@ -189,31 +205,27 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 硬性读取顺序：先读取迭代设计文档，再读取 `architecture_constraints.md` 和 `coding_standards.md`，然后按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。严禁跳过这些启动读取动作。严禁违反已有的核心历史开发资产、架构约束和编码规范进行重复造轮子、破坏性重构或风格漂移。
 
-- 启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码。
+- 启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码；快速模式也必须使用轻量 loop（建议 `max-iterations <= 3`），不得由 Agent 直接绕过 loop 自行修改。
 - 如果这是 UI 或 Styling 改动，**强制要求 `upaseo-loop` 的 worker 只能使用 Gemini 模型**。
 - TDD 模式推进：先写失败测试/日志埋点，再让它跑通。
 
-#### C. 子 Agent 完工通知与主计划状态同步（硬性规定）
+#### D. 子 Agent 完工通知与主计划状态同步（硬性规定）
 
 当子 Agent 完成阶段性任务并发出完工通知时，**主 Agent (Orchestrator) 必须执行以下同步规程，在完成之前不得执行任何后续动作**：
 
 1. **读取子 Agent 交付产出**：查看子 Agent 的最终报告或直接 `view_file` 读取受影响的关键文件。
-2. **立即更新主计划状态**：在 `.paseo/plans/<slug>.md` 中将当前迭代的状态从 `[ ]` 更新为 `[x]`（成功）或 `[!]`（受阻需修复）。
-3. **追加进度 Notes**：在主计划文件的 `Progress Notes` 段落中追加本迭代的核心完成说明。
+2. **立即记录实现完成状态**：在主计划文件的 `Progress Notes` 段落中追加“实现完成，等待验证”的核心说明；此时不得把路线图勾选为 `[x]`，因为 `[x]` 仅代表验证和必要用户网关都已经通过。
+3. **受阻状态同步**：若子 Agent 报告 blocked 或实现结果不可验证，必须在 `.paseo/plans/<slug>.md` 中将当前迭代标记为 `[!]` 并留在本迭代修复。
 4. **保存主计划文件后，方可进入后续流程**。
-5. **增量刷新历史开发资产库 (Story Auto-Update)**：
-   - 主 Agent 分析子 Agent 本轮迭代的所有变更（代码 diff 和受影响文件）。
-   - 若发现本轮迭代新增或修改了前后台用户功能点用例、数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录、前端展示页面路由、架构约束或编码规范：
-     - 主 Agent 必须直接启动或扮演 `story-updater` 角色，使用代码修改工具增量更新 `.paseo/story/` 下对应的 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 或 `coding_standards.md` 文档。
-     - 追加的规范描述必须 be 极简的高密度信息，并统一使用 `* [Updated in Iter <N>]` 格式为前缀，确保资产库实时、最真实地反映系统最新蓝图。
+5. **记录待刷新资产范围**：主 Agent 初步分析本轮变更可能影响的故事、数据模型、API、模块、架构约束或编码规范；但在验证和必要用户网关通过之前，不得正式写入 `.paseo/story/` 资产。
 
-> **严禁**：子 Agent 完工后直接跳到下一阶段而不更新主计划文件与增量刷新关联资产。
+> **严禁**：子 Agent 完工后直接跳到下一阶段而不记录主计划执行状态；验证通过前严禁提前将路线图标记为 `[x]`。
 
-#### D. 优先日志验证 (Log-Based Verification)
+#### E. 优先日志验证 (Log-Based Verification)
 - 无论是 `upaseo-loop` 的自动验证，还是后续的 Auditor `verify` 阶段，都**必须遵循"优先日志验证"原则**。
 - Agent 需要优先捕获并详细分析应用程序在运行时的事件日志 (Event Logs)、Debug 日志以及状态流输出，以此直接自证功能完整性，其后辅以自动化测试用例通过。
 
-#### E. 用户验证网关 / 自主推进判定 (Gate or Auto-Advance)
+#### F. 用户验证网关 / 自主推进判定 (Gate or Auto-Advance)
 
 **Agent 根据验证结果的确定性自主决定是否需要等待用户确认。用户可通过 `--autopilot` / `--gate` 参数强制覆盖。**
 
@@ -231,19 +243,21 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 **自动推进时：**
 - 在主计划文件中记录 `[auto-advanced]` 标记及验证证据摘要。
+- 执行增量历史资产刷新：若本轮新增或修改了前后台用户功能点用例、数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录、前端展示页面路由、架构约束或编码规范，必须由主 Agent 或 `story-updater` 更新 `.paseo/story/` 对应文件，并以 `* [Updated in Iter <N>]` 作为前缀。
+- 将当前迭代路线图状态更新为 `[x]`，并创建本迭代 checkpoint commit，记录 commit hash 后方可进入下一迭代。
 - 用户可随时要求回溯查看。
 
 **等待用户时，向用户展示：**
 1. 本迭代完成的成果。
 2. 捕获到的关键**日志输出片段/验证结果**。
 3. 指导用户自行操作的**手动验证步骤**。
-4. 等待用户回复"验证通过"后方可继续。若不通过，留在本迭代修复。
+4. 等待用户回复"验证通过"后，将当前迭代路线图状态更新为 `[x]`，执行必要的增量历史资产刷新，创建本迭代 checkpoint commit，记录 commit hash 后方可继续。若不通过，留在本迭代修复。
 
-#### F. 回滚机制 (Rollback)
+#### G. 回滚机制 (Rollback)
 
 当迭代 N 的改动破坏了迭代 N-1 已验证通过的功能时：
 1. 优先在当前迭代内修复回归问题。
-2. 若修复失败（超过 loop 最大迭代次数），执行 `git revert` 回退到上一迭代的 commit 点。
+2. 若修复失败（超过 loop 最大迭代次数），执行 `git revert` 回退到上一已验证迭代的 checkpoint commit；若 checkpoint 缺失，必须暂停并向用户说明不能安全自动回滚。
 3. 将回退事件记录到主计划文件（标记 `[!] 迭代 N: reverted`），并重新设计当前迭代方案。
 
 ---
@@ -267,7 +281,7 @@ Orchestrator 在 `initialPrompt` 中必须：
    - 在 worktree 中进行整洁提交，运行 `gh pr create` 提交 PR。
    - 将 PR 链接和自审报告呈给用户。
    - **最终 PR 阶段必须等待用户审批**，不可自动合并。
-   - 用户确认无误并合并 PR 后，由 Orchestrator 完成 `upaseo` 工作区的归档与清理。
+   - `using-paseo` 到 PR 创建与用户审批为止；用户确认并合并 PR 后，必须手动运行 `/upaseo-ship` 完成发布校验、资产固化、CHANGELOG 和 worktree/分支清理。
 
 ### 7. 会话复盘与学习落盘 (Session Learnings Dump) ⚠️ 硬性规定
 
@@ -295,5 +309,5 @@ Orchestrator 在 `initialPrompt` 中必须：
 若执行过程中中断，重新调用 `/using-paseo <slug>` 时：
 1. **首先执行 Step 0 和 Step 0.1**：初始化目录、读取 learnings。
 2. 扫描 `.paseo/plans/<slug>.md` 确定当前处于哪一个未完成的迭代。
-3. 读取该迭代的 `iter_<N>_design_tasks.md` 文件。
+3. 读取该迭代的 `iter_<N>_design_tasks.md` 文件；若遇到旧版历史文件 `iter_<N>_design.md`，先兼容读取，并在继续开发前迁移为 `iter_<N>_design_tasks.md`。
 4. 从对应的"设计"、"upaseo-loop 实现"、"日志验证"或"用户验证网关"现场无缝恢复执行。

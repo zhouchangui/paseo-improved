@@ -41,9 +41,10 @@ Auditor 用自然语言报告即可，但必须包含：验证结论（pass/fail
 | `refactor` | 重塑已有代码，为下阶段迭代特征做行为等价的铺垫。 | `refactorer` | 必须通过 `upaseo-loop` 自动验证运行，直到 parity test 通过。 |
 | `implement` | 增量功能编写。 | `impl` | 必须强制使用 `upaseo-loop` 工具循环自动跑通验证。 |
 | `ui-design` | 页面视觉、组件样式及 UX 重塑。 | `ui-impl` | **Provider 强制只能使用 Gemini 系列模型**。必须使用 `upaseo-loop`。 |
+| `plan-review` | 迭代实现前的计划博弈和验收定稿。 | `architecture-designer` / `feature-designer` / `test-strategist` | 必须围绕 `iter_N_design_tasks.md` 进行 1-2 轮反馈并写入 `Design Council Log`。 |
 | `verify` | 迭代验收或最后的整体大验收。 | `auditor` | **优先日志验证 (Log-Based Verification)**。 |
 | `gate` | 等待用户手动验证并首肯。 | 无 (Orchestrator 暂停) | 等待用户验证并回复"验证通过"。 |
-| `auto-advance` | Agent 自主判定推进。 | 无 (Orchestrator 记录证据) | 记录 `[auto-advanced]` 标记及验证证据摘要。 |
+| `auto-advance` | Agent 自主判定推进。 | 无 (Orchestrator 记录证据) | 记录 `[auto-advanced]` 标记及验证证据摘要，刷新必要资产，标记 `[x]` 并创建 checkpoint commit。 |
 
 ---
 
@@ -60,6 +61,24 @@ Auditor 用自然语言报告即可，但必须包含：验证结论（pass/fail
 - **原则**：应用极简主义 / 简单优先指南，消除疑惑，提供 2 种带 Trade-offs 的折中极简设计。
 - **首步**：读取主计划文件（若已存在）。
 - **产出**：最多 3 个多选题，与用户交互达成方案共识。
+
+### architecture-designer (架构设计评审员 - 只读)
+- **职责**：在每个迭代实现前审查 `iter_N_design_tasks.md` 草案的架构可行性。
+- **首步**：读取迭代设计文档、`architecture_constraints.md`、`coding_standards.md`，并按需读取 `modules.md`、`data_models.md`、`apis.md`。
+- **关注点**：模块归属、依赖方向、数据流、运行时边界、外部集成边界、迁移风险和是否存在破坏性重构。
+- **产出**：列出阻塞问题、可接受方案、必须写入计划的架构决策；不得直接改代码。
+
+### feature-designer (功能设计评审员 - 只读)
+- **职责**：审查本轮功能边界、用户故事、业务行为和与既有资产的一致性。
+- **首步**：读取迭代设计文档、`stories.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
+- **关注点**：功能入口、用户可见行为、边界条件、不做事项、与旧功能的兼容性、是否需要用户验证网关。
+- **产出**：给出功能设计修正建议和最终应写入计划的验收口径；不得直接改代码。
+
+### test-strategist (验收测试评审员 - 只读)
+- **职责**：在实现前审查验证计划是否足够客观、可执行、能暴露失败。
+- **首步**：读取迭代设计文档、`coding_standards.md`、`architecture_constraints.md`，并按需读取关联 API、数据模型或用户故事资产。
+- **关注点**：日志证据、测试命令、browser/manual 步骤、失败条件、回归面、验收样例和是否需要第二轮计划修正。
+- **产出**：给出可执行的验收方案、阻塞性测试缺口和复审结论；不得直接改代码。
 
 ### refactorer (重构员 - 允许写代码)
 - **职责**：执行 `refactor` 阶段工作，重塑但不改变外部现有行为。
@@ -90,6 +109,6 @@ Auditor 用自然语言报告即可，但必须包含：验证结论（pass/fail
 - **报告要求**：用自然语言报告，必须包含验证结论（pass/fail）、关键日志片段、阻塞问题（若有）。
 
 ### story-updater (历史资产/开发故事更新员 - 允许写代码)
-- **职责**：在每次迭代子 Agent 完工并完成状态同步后，自动审查本次迭代代码的所有变更（Diff 及新增文件）。
+- **职责**：在每次迭代验证和必要用户网关通过后，自动审查本次迭代代码的所有变更（Diff 及新增文件）。
 - **任务**：若本轮迭代涉及核心数据结构/表结构、核心 API 接口/内部服务、包模块职责/路由页面、架构约束或编码规范等历史开发资产的变更，必须使用代码替换工具，规范地将增量变更写入对应的 `.paseo/story/` 资产文档中。
 - **格式要求**：更新写入的资产信息，必须精确并附带 `[Updated in Iter N]` 前缀。

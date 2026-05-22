@@ -1,8 +1,8 @@
 ---
 name: upaseo-ship
 description: >-
-  本地发布与收尾交付技能。在代码被批准合并后由用户手动调用，处理代码合并、
-  生产构建校验、历史开发资产版本正式化(Story Release)、物理工作区与临时分支清理，
+  本地发布与收尾交付技能。在 PR 已被批准并合并后由用户手动调用，处理主干发布校验、
+  历史开发资产版本正式化(Story Release)、Release metadata commit、物理工作区与临时分支清理，
   以及 CHANGELOG 生成。
 user-invocable: true
 argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
@@ -10,13 +10,13 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
 
 # Upaseo Ship (本地发布与收尾交付技能)
 
-本技能为 `upaseo` 套件的发布与清理编排器。在您的功能开发完成、通过 PR 自审并被批准合并之后，由您**手动敲入 `/upaseo-ship` 命令触发**。它通过**环境前置校验 → 编译与测试防线 → 历史开发资产版本正式化 → 物理工作区与开发分支清理 → 全局避障经验同步**，实现项目的高质量交付与开发环境的绝对整洁。
+本技能为 `upaseo` 套件的发布与清理编排器。在您的功能开发完成、通过 PR 自审、且 PR 已经合并到主干之后，由您**手动敲入 `/upaseo-ship` 命令触发**。它通过**环境前置校验 → 编译与测试防线 → 历史开发资产版本正式化 → Release metadata commit → 物理工作区与开发分支清理 → 全局避障经验同步**，实现项目的高质量交付与开发环境的绝对整洁。
 
 ---
 
 ## 1. 预备知识与依赖
 1. 角色职责规范定义在 `references/roles.md`。
-2. 运行此命令前，请确保您在主仓库的工作区中，且核心开发分支（如 `main` 或 `master`）保持最新。
+2. 运行此命令前，请确保您在主仓库的工作区中，当前分支为已合并 PR 后的核心开发分支（如 `main` 或 `master`），且已经拉取最新远端代码。
 3. 参数说明：
    - `--version <vX.Y.Z>`：手动指定当前发布的正式版本号。若未指定，系统默认采用当前日期 `[Shipped on YYYY-MM-DD]` 进行资产固化。
    - `--keep-worktree`：强制保留本地的临时 worktree 物理目录，不进行物理删除。
@@ -41,11 +41,14 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
    - 检查 `.paseo/plans/` 目录下本次会话的主计划 markdown 文件。
    - 确认其中所有的增量迭代状态是否均已标记为 `[x]`（已完成），是否存在 `[ ]` 未完成或 `[!]` 受阻标记。如果存在未完成项，立即抛出警告并阻断发布。
 2. **本地 Git 状态核实**：
+   - 检查当前分支是否为核心开发分支，是否已经包含已合并 PR 的最新提交。
    - 检查当前本地分支是否有未提交的更改。如果工作区不干净，提示用户提交或 stash 后再执行 ship。
 3. **终极编译与测试阻断 (Compilation & Test Gate)**：
-   - 执行生产环境构建命令（例如 `npm run build` 或项目的编译打包命令）。
-   - 运行项目全量单元测试与静态语法检查（例如 `npm run lint && npm test`）。
+   - 优先读取 `.paseo/story/coding_standards.md` 中记录的构建、Lint、类型检查和测试命令；若资产中没有定义，再使用项目惯例命令（例如 `npm run build`、`npm run lint && npm test`）。
+   - 执行生产环境构建命令和项目全量单元测试与静态语法检查。
    - **一旦出现任何编译报错、Lint 告警或测试用例未通过，立即抛出醒目警告并强制中断发布，确保不带病上线。**
+4. **历史资产存在性核实**：
+   - `.paseo/story/` 及六个资产文件必须存在。若缺失，阻断发布并提示先运行 `/upaseo-init` 或让 `/using-paseo` 完成模板自愈初始化。
 
 ### Step 2: 历史开发资产固化与 CHANGELOG 追加 (Story Release & Changelog)
 由 `release-auditor` 角色主导：
@@ -58,11 +61,15 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
 2. **CHANGELOG.md 自动生成**：
    - 读取本次主计划文件的 `Progress Notes` 章节，提炼出高密度的改动大纲。
    - 如果项目根目录下存在 `CHANGELOG.md`，自动将本次的改动大纲与版本号/日期作为最新一条记录追加到 `CHANGELOG.md` 的顶部。若文件不存在，则在根目录下新建 `CHANGELOG.md` 并写入。
+3. **Release metadata commit**：
+   - 若本步骤产生了 `.paseo/story/*` 或 `CHANGELOG.md` 修改，必须创建一个独立提交（例如 `chore: release metadata <version-or-date>`），让发布元数据可追溯。
+   - 若用户指定 `--dry-run`，只打印将会修改的文件和 commit message，不写文件、不提交。
 
 ### Step 3: 物理工作区与分支安全清理 (Physical Cleanup)
 由 `cleaner` 角色主导：
-1. **分支合并与推送 (Merge & Push)**：
-   - 在本地安全地将当前的 feature 分支合入主干（`main`/`master`）或发布分支，或提醒用户在远程仓库中点击合并，确保代码的绝对同步。
+1. **合并状态确认 (Merge State Check)**：
+   - 本阶段不负责发起 feature 分支合并；它只确认 PR 已经合并到主干，且主干包含发布目标提交。
+   - 若 PR 尚未合并，停止并提醒用户先完成 PR 审批与合并。
 2. **Worktree 磁盘安全回收**：
    - 若本次开发启用了 `git worktree` 独立物理工作区，且用户**未指定** `--keep-worktree`：
      - 安全地运行 `git worktree remove <worktree路径>` 彻底回收该 worktree 在磁盘上的物理文件夹，防止磁盘垃圾堆积。

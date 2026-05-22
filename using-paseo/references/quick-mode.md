@@ -17,10 +17,16 @@ Step 0.1: 前置读取 learnings.jsonl
 Step 0.2: 判定为快速模式 → 告知用户（一句话理由）
   │
   ▼
+创建最小主计划 (.paseo/plans/<slug>.md)
+  │
+  ▼
 创建单迭代设计文档 (iter_1_design_tasks.md)
   │
   ▼
-直接实现（upaseo-loop 或 Agent 自行修改）
+轻量迭代计划评审会（架构/功能/测试 1 轮；有阻塞则第 2 轮）
+  │
+  ▼
+轻量 upaseo-loop 实现（max-iterations <= 3）
   │
   ▼
 日志验证 (Log-Based Verification)
@@ -32,7 +38,7 @@ Step 0.2: 判定为快速模式 → 告知用户（一句话理由）
 upaseo-simplify + upaseo-reviewer
   │
   ▼
-提交 commit → 会话复盘 → 归档
+checkpoint commit → 会话复盘 → PR/提交交付
 ```
 
 ## 与完整模式的差异
@@ -40,8 +46,9 @@ upaseo-simplify + upaseo-reviewer
 | 环节 | 快速模式 | 完整仪式模式 |
 |:-----|:---------|:-------------|
 | 脑暴 (brainstorm) | **跳过** | 必须执行 |
+| 迭代计划评审会 | **必须执行 1 轮，阻塞时第 2 轮** | 每个迭代必须执行 1-2 轮 |
 | 迭代数 | **固定 1 个** | 多个 |
-| 路线图文件 | 不创建 | 创建 `.paseo/plans/<slug>.md` |
+| 路线图文件 | 创建最小 `.paseo/plans/<slug>.md` | 创建完整 `.paseo/plans/<slug>.md` |
 | 自主推进 | 不支持（必须用户确认） | 支持 auto-advance |
 | 自审 + 精简 | **同样执行** | 同样执行 |
 | 会话复盘 | **同样执行** | 同样执行 |

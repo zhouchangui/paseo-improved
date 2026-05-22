@@ -16,6 +16,9 @@
 - **历史开发资产转换 (Solidification)**：
   - 必须使用精确的代码编辑工具读取并替换 `.paseo/story/` 下的开发期临时前缀（`* [Updated in Iter N]`）。
   - 根据 `--version` 参数或日期，进行精准的字符串重写，并在更新日志中留存清晰的归档痕迹。
+- **Release metadata commit**：
+  - 若资产固化或 CHANGELOG 生成导致工作区产生变更，必须创建独立的 release metadata commit，避免发布元数据游离在主干之外。
+  - 若用户指定 `--dry-run`，只报告将执行的文件修改和 commit message，不实际写入或提交。
 - **日志与可观测性要求**：
   - 在完成资产替换和 Changelog 生成后，必须详细打印哪些文件被成功固化、新增了什么版本的 Changelog 信息，确保一切有迹可循。
 
@@ -30,6 +33,7 @@
 - **磁盘无残留 (Disk Cleanup)**：
   - 必须仔细检索本地的 `git worktree`。对于不需要保留的 worktree，必须使用 `git worktree remove` 进行安全彻底的物理回收，消除残留磁盘文件夹。
 - **Git 树极简化 (Git Simplicity)**：
+  - `/upaseo-ship` 不负责发起 feature 分支合并；必须先确认 PR 已经合并到主干，且主干包含目标提交。
   - 在确认远程或主干分支已安全合并该临时功能代码后，必须安全地通过 `git branch -d` 移除本地分支，确保用户的本地 `git branch` 仅留存活跃的、必需的分支。
 - **全局 learnings 排重与合并 (Merge & Dedup)**：
   - 读取本地 learnings 与全局 learnings 时，必须精细对比，防止相同教训产生冗余。

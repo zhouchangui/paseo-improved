@@ -1,9 +1,21 @@
 ---
 name: upaseo
-description: Upaseo reference for managing agents and worktrees. Load whenever you need to create agents, send them prompts, or manage worktrees in upaseo developer workflows.
+description: Foundation reference for Paseo agents, worktrees, CLI, provider preferences, and daemon operations. This is not the product development workflow entrypoint; use using-paseo for end-to-end development.
 ---
 
-Upaseo is a daemon that supervises AI coding agents on your machine. Control it through tools or a CLI.
+# Upaseo Foundation Reference
+
+`upaseo` is the low-level foundation reference for skills that need to manage Paseo agents, worktrees, provider preferences, schedules, or daemon diagnostics. It is not a user-facing development workflow.
+
+For full product development tasks, use `/using-paseo <task>`. That workflow owns planning, iteration design, Design Council review, implementation loops, verification gates, story asset updates, review, and delivery.
+
+## Scope Boundary
+
+- `upaseo` owns: daemon/CLI surface, agent and worktree primitives, provider preference format, async waiting rules, schedules, and debugging commands.
+- `using-paseo` owns: end-to-end development orchestration, quick/full mode selection, `.paseo/` asset initialization, iteration planning, plan-review council, `upaseo-loop` execution, validation gates, asset refresh, and session recovery.
+- Other upaseo skills should read this file only when they need low-level Paseo mechanics. They should not duplicate or reimplement the complete development lifecycle.
+
+Upaseo is backed by a daemon that supervises AI coding agents on your machine. Control it through tools or a CLI.
 
 ## Worktrees
 
@@ -118,20 +130,17 @@ Debug order:
 
 **Never restart the daemon without explicit user approval** — it kills every running agent, including, often, the one asking.
 
-## 避障学习系统 (Learnings)
+## Shared Learnings Format
 
-所有 upaseo 技能在启动时应检查项目根目录下的 `.paseo/learnings.jsonl`。若存在，`view_file` 读取并将历史避障规则作为本次执行的硬约束。
+Workflow skills use the project-level `.paseo/learnings.jsonl` file for hard mitigation rules. `using-paseo` owns the lifecycle of this file; lower-level skills may read it when they are launched standalone or when they build worker prompts.
 
 文件格式为 JSON Lines，每条记录：
 ```json
 {"timestamp":"<ISO8601>","session_id":"<conversation-id>","category":"<command_error|wrong_assumption|tool_misuse|design_flaw>","failed_attempt":"<简述>","mitigation":"<应该怎么做>"}
 ```
 
-容量上限 30 条。超过时由 Orchestrator（`using-paseo`）精炼合并旧条目。写入前去重。
+容量上限 30 条。超过时由 Orchestrator (`using-paseo`) 精炼合并旧条目。写入前去重。
 
-## 异常恢复 (Resumability)
+## Workflow Recovery Ownership
 
-当 Agent 执行中断后重新启动时：
-1. 检查 `.paseo/plans/` 目录下是否有包含 `[ ]` 未完成标记的计划文件。
-2. 若有，读取计划文件和对应的迭代设计文档，从最近一个未完成的步骤恢复。
-3. 完整的异常恢复流程参见 `using-paseo` 技能的"异常恢复"章节。
+Interrupted development workflow recovery belongs to `using-paseo`, because it owns `.paseo/plans/`, iteration state, validation gates, and asset refresh. `upaseo` only provides the agent/worktree/daemon primitives needed by that recovery flow.
