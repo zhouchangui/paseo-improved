@@ -9,7 +9,7 @@
 - [x] 迭代 2：对齐 brainstorm、simplify、reviewer 的 learnings 前置读取
 - [x] 迭代 3：upaseo 基座增加 learnings 全局引用说明 + 异常恢复规程
 - [x] 迭代 4：添加项目基础设施 (.gitignore, README.md) 与自动化验证脚本
-- [x] 迭代 5：using-paseo 长文件拆分优化 — 提取快速模式参考卡
+- [x] 迭代 5：using-upaseo 长文件拆分优化 — 提取快速模式参考卡
 
 ## Progress Notes
 
@@ -40,7 +40,7 @@
 - commit: 1825c9d
 
 ### 迭代 5 ✅ [auto-advanced]
-- 新增：using-paseo/references/quick-mode.md, params.md
+- 新增：using-upaseo/references/quick-mode.md, params.md
 - 主文件增加 4 处 references 交叉引用
 - 快速模式完整流程和参数速查表独立为参考文件
 - 验证：validate.sh 32/32 ✅，引用文件内容完整

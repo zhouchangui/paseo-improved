@@ -48,7 +48,7 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
    - 执行生产环境构建命令和项目全量单元测试与静态语法检查。
    - **一旦出现任何编译报错、Lint 告警或测试用例未通过，立即抛出醒目警告并强制中断发布，确保不带病上线。**
 4. **历史资产存在性核实**：
-   - `.paseo/story/` 及六个资产文件必须存在。若缺失，阻断发布并提示先运行 `/upaseo-init` 或让 `/using-paseo` 完成模板自愈初始化。
+   - `.paseo/story/` 及六个资产文件必须存在。若缺失，阻断发布并提示先运行 `/upaseo-init` 或让 `/using-upaseo` 完成模板自愈初始化。
 
 ### Step 2: 历史开发资产固化与 CHANGELOG 追加 (Story Release & Changelog)
 由 `release-auditor` 角色主导：

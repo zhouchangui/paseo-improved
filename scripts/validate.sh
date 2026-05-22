@@ -12,7 +12,7 @@ pass() { echo "  ✅ $1"; PASS=$((PASS+1)); }
 fail() { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 
 SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init)
-ALL_SKILLS=("${SKILLS[@]}" using-paseo)
+ALL_SKILLS=("${SKILLS[@]}" using-upaseo)
 
 echo "=== 1. YAML name 字段校验 ==="
 for s in "${ALL_SKILLS[@]}"; do
@@ -42,24 +42,24 @@ done
 
 echo ""
 echo "=== 4. 外部技能引用残留检测 ==="
-found=$(grep -rn "brainstorming\|code-simplify\|code-reviewer\|karpathy-guidelines" "$ROOT"/*/SKILL.md "$ROOT"/using-paseo/references/roles.md 2>/dev/null || true)
+found=$(grep -rn "brainstorming\|code-simplify\|code-reviewer\|karpathy-guidelines" "$ROOT"/*/SKILL.md "$ROOT"/using-upaseo/references/roles.md 2>/dev/null || true)
 if [ -z "$found" ]; then pass "无外部技能引用残留"; else fail "发现外部引用: $found"; fi
 
 echo ""
 echo "=== 5. 计划文件路径一致性 ==="
-bad_paths=$(grep -n '~/\.paseo/plans\|~/.paseo/plans' "$ROOT/using-paseo/SKILL.md" 2>/dev/null || true)
+bad_paths=$(grep -n '~/\.paseo/plans\|~/.paseo/plans' "$ROOT/using-upaseo/SKILL.md" 2>/dev/null || true)
 if [ -z "$bad_paths" ]; then pass "路径统一为 .paseo/plans/ (项目根目录)"; else fail "发现 ~/.paseo/plans 引用: $bad_paths"; fi
 
 echo ""
-echo "=== 5.1 upaseo 与 using-paseo 职责边界 ==="
+echo "=== 5.1 upaseo 与 using-upaseo 职责边界 ==="
 grep -q "Foundation Reference" "$ROOT/upaseo/SKILL.md" && pass "upaseo 明确为底层基座参考" || fail "upaseo 未明确基座参考定位"
 grep -q "not a user-facing development workflow\|not the product development workflow entrypoint" "$ROOT/upaseo/SKILL.md" && pass "upaseo 明确不是完整开发入口" || fail "upaseo 未声明非完整开发入口"
-grep -q "唯一的完整开发工作流入口" "$ROOT/using-paseo/SKILL.md" && pass "using-paseo 明确为唯一完整开发入口" || fail "using-paseo 未声明唯一完整开发入口"
-grep -q "不得静默创建软链接" "$ROOT/using-paseo/SKILL.md" && pass "using-paseo 遵守 CLI 软链接需用户确认" || fail "using-paseo 仍可能静默创建 CLI 软链接"
+grep -q "唯一的完整开发工作流入口" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 明确为唯一完整开发入口" || fail "using-upaseo 未声明唯一完整开发入口"
+grep -q "不得静默创建软链接" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 遵守 CLI 软链接需用户确认" || fail "using-upaseo 仍可能静默创建 CLI 软链接"
 
 echo ""
 echo "=== 6. roles.md 关键规程检查 ==="
-roles="$ROOT/using-paseo/references/roles.md"
+roles="$ROOT/using-upaseo/references/roles.md"
 grep -q "内联摘要\|按需读取" "$roles" && pass "精简传递策略" || fail "精简传递策略缺失"
 grep -q "合规检查" "$roles" && pass "合规检查规程" || fail "合规检查规程缺失"
 grep -q "完工通知\|Completion" "$roles" && pass "完工通知规程" || fail "完工通知规程缺失"
@@ -71,17 +71,17 @@ grep -q "test-strategist" "$roles" && pass "test-strategist 验收评审角色" 
 echo ""
 echo "=== 7. 开发故事与历史资产目录机制校验 ==="
 for t in stories data_models apis modules architecture_constraints coding_standards; do
-  if [ -f "$ROOT/using-paseo/references/${t}_template.md" ] || [ -f "$ROOT/upaseo-init/references/templates/${t}.md" ]; then pass "模板 $t 存在"; else fail "缺失模板 ${t}_template.md"; fi
+  if [ -f "$ROOT/using-upaseo/references/${t}_template.md" ] || [ -f "$ROOT/upaseo-init/references/templates/${t}.md" ]; then pass "模板 $t 存在"; else fail "缺失模板 ${t}_template.md"; fi
 done
-if grep -q "mkdir -p.*\/story\|mkdir -p.*\.paseo\/story" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story 目录初始化"; else fail "SKILL.md 缺失 story 目录创建"; fi
-if grep -q "story-updater" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story-updater 自动更新资产机制"; else fail "SKILL.md 缺失 story-updater 机制"; fi
-if grep -q "stories.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 stories 资产历史强注入"; else fail "SKILL.md 缺失 stories 资产强注入"; fi
-if grep -q "data_models.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 data_models 资产历史强注入"; else fail "SKILL.md 缺失 data_models 资产强注入"; fi
-if grep -q "architecture_constraints.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 architecture_constraints 资产历史强注入"; else fail "SKILL.md 缺失 architecture_constraints 资产强注入"; fi
-if grep -q "coding_standards.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 coding_standards 资产历史强注入"; else fail "SKILL.md 缺失 coding_standards 资产强注入"; fi
-if grep -q "硬性读取顺序.*architecture_constraints.md.*coding_standards.md" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 明确子 Agent 必读架构约束与编码规范"; else fail "SKILL.md 缺失子 Agent 必读架构约束与编码规范"; fi
+if grep -q "mkdir -p.*\/story\|mkdir -p.*\.paseo\/story" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story 目录初始化"; else fail "SKILL.md 缺失 story 目录创建"; fi
+if grep -q "story-updater" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story-updater 自动更新资产机制"; else fail "SKILL.md 缺失 story-updater 机制"; fi
+if grep -q "stories.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 stories 资产历史强注入"; else fail "SKILL.md 缺失 stories 资产强注入"; fi
+if grep -q "data_models.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 data_models 资产历史强注入"; else fail "SKILL.md 缺失 data_models 资产强注入"; fi
+if grep -q "architecture_constraints.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 architecture_constraints 资产历史强注入"; else fail "SKILL.md 缺失 architecture_constraints 资产强注入"; fi
+if grep -q "coding_standards.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 coding_standards 资产历史强注入"; else fail "SKILL.md 缺失 coding_standards 资产强注入"; fi
+if grep -q "硬性读取顺序.*architecture_constraints.md.*coding_standards.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 明确子 Agent 必读架构约束与编码规范"; else fail "SKILL.md 缺失子 Agent 必读架构约束与编码规范"; fi
 if grep -q "早期 tool call.*architecture_constraints.md.*coding_standards.md" "$ROOT/upaseo-loop/SKILL.md" 2>/dev/null; then pass "upaseo-loop verifier 检查架构约束与编码规范读取"; else fail "upaseo-loop 缺失架构约束与编码规范读取合规检查"; fi
-if grep -q "迭代计划评审会" "$ROOT/using-paseo/SKILL.md" 2>/dev/null && grep -q "Design Council Log" "$ROOT/using-paseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含迭代计划评审会与会议记录门槛"; else fail "SKILL.md 缺失迭代计划评审会或会议记录门槛"; fi
+if grep -q "迭代计划评审会" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null && grep -q "Design Council Log" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含迭代计划评审会与会议记录门槛"; else fail "SKILL.md 缺失迭代计划评审会或会议记录门槛"; fi
 echo "--- 7.1 运行时 story 资产文件存在性 ---"
 for t in stories data_models apis modules architecture_constraints coding_standards; do
   if [ -f "$ROOT/.paseo/story/${t}.md" ]; then pass ".paseo/story/${t}.md 存在"; else fail "缺失 .paseo/story/${t}.md"; fi
@@ -89,10 +89,10 @@ done
 
 echo ""
 echo "=== 7.2 quick/full 与 checkpoint 规程一致性 ==="
-grep -q "最小主计划" "$ROOT/using-paseo/SKILL.md" && grep -q "最小主计划" "$ROOT/using-paseo/references/quick-mode.md" && pass "quick 模式创建最小主计划" || fail "quick 模式未明确创建最小主计划"
-grep -q "轻量 upaseo-loop\|轻量 Loop" "$ROOT/using-paseo/references/quick-mode.md" && ! grep -q "Agent 自行修改" "$ROOT/using-paseo/references/quick-mode.md" && pass "quick 模式强制轻量 loop" || fail "quick 模式仍允许绕过 upaseo-loop"
-grep -q "checkpoint commit" "$ROOT/using-paseo/SKILL.md" && pass "using-paseo 包含迭代 checkpoint commit" || fail "using-paseo 缺失 checkpoint commit 规程"
-grep -q "iter_<N>_design.md" "$ROOT/using-paseo/SKILL.md" && pass "恢复流程兼容旧版 iter_N_design.md" || fail "恢复流程缺失旧计划文件兼容"
+grep -q "最小主计划" "$ROOT/using-upaseo/SKILL.md" && grep -q "最小主计划" "$ROOT/using-upaseo/references/quick-mode.md" && pass "quick 模式创建最小主计划" || fail "quick 模式未明确创建最小主计划"
+grep -q "轻量 upaseo-loop\|轻量 Loop" "$ROOT/using-upaseo/references/quick-mode.md" && ! grep -q "Agent 自行修改" "$ROOT/using-upaseo/references/quick-mode.md" && pass "quick 模式强制轻量 loop" || fail "quick 模式仍允许绕过 upaseo-loop"
+grep -q "checkpoint commit" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 包含迭代 checkpoint commit" || fail "using-upaseo 缺失 checkpoint commit 规程"
+grep -q "iter_<N>_design.md" "$ROOT/using-upaseo/SKILL.md" && pass "恢复流程兼容旧版 iter_N_design.md" || fail "恢复流程缺失旧计划文件兼容"
 
 echo ""
 echo "=== 8. upaseo-ship 核心发布规程校验 ==="

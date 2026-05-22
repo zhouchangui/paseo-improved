@@ -1,5 +1,5 @@
 ---
-name: using-paseo
+name: using-upaseo
 description: >-
   核心开发工作流编排技能。运行重度开发任务的生命周期管理，内置自主复杂度判定、
   增量式迭代推进、独立迭代设计文档、自主推进/用户验证网关、实现阶段强制
@@ -9,7 +9,7 @@ user-invocable: true
 argument-hint: "[--quick|--full] [--autopilot|--gate] [--worktree] [--pr-per-iteration] <task>"
 ---
 
-# Using Paseo (核心开发工作流技能)
+# Using Upaseo (核心开发工作流技能)
 
 本技能为唯一的完整开发工作流入口。它将一项任务在完全本地化的 `upaseo` 基座上驱动，严格通过：**避障前置 → 自主复杂度判定 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 强制 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
 
@@ -74,7 +74,7 @@ Step 0.2: 自主判定执行模式 (quick / full)
 2. **UI 设计 Gemini 专属约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider **强制限定为 `gemini` 系列模型**。无 Gemini 可用时，暂停并通知用户，不得降级。
 3. **自动初始化 `.paseo/` 目录与历史资产库自愈**：
    - 运行 `mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.paseo/story` 确保目录结构存在。
-   - 历史资产库自愈：检查 `.paseo/story/` 目录下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。若有任何文件缺失，自动将 `using-paseo/references/` 下对应的模板文件（例如 `stories_template.md` 等）拷贝/写入生成至该目录下，确保架构基础资产库健全。如果当前项目是遗留或老项目，**推荐手动触发运行 `/upaseo-init` 技能**来进行代码的深度扫描和资产的逆向初始化整理。
+   - 历史资产库自愈：检查 `.paseo/story/` 目录下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。若有任何文件缺失，自动将 `using-upaseo/references/` 下对应的模板文件（例如 `stories_template.md` 等）拷贝/写入生成至该目录下，确保架构基础资产库健全。如果当前项目是遗留或老项目，**推荐手动触发运行 `/upaseo-init` 技能**来进行代码的深度扫描和资产的逆向初始化整理。
 4. **Paseo 命令行自动检测与初始化安装**：
    - 检查当前系统 `PATH` 中是否能成功执行 `paseo`（通过 `which paseo` 或运行 `paseo --version`）。
    - 若未在 `PATH` 中找到：
@@ -281,7 +281,7 @@ Orchestrator 在 `initialPrompt` 中必须：
    - 在 worktree 中进行整洁提交，运行 `gh pr create` 提交 PR。
    - 将 PR 链接和自审报告呈给用户。
    - **最终 PR 阶段必须等待用户审批**，不可自动合并。
-   - `using-paseo` 到 PR 创建与用户审批为止；用户确认并合并 PR 后，必须手动运行 `/upaseo-ship` 完成发布校验、资产固化、CHANGELOG 和 worktree/分支清理。
+   - `using-upaseo` 到 PR 创建与用户审批为止；用户确认并合并 PR 后，必须手动运行 `/upaseo-ship` 完成发布校验、资产固化、CHANGELOG 和 worktree/分支清理。
 
 ### 7. 会话复盘与学习落盘 (Session Learnings Dump) ⚠️ 硬性规定
 
@@ -306,7 +306,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 ---
 
 ## 异常恢复 (Resumability)
-若执行过程中中断，重新调用 `/using-paseo <slug>` 时：
+若执行过程中中断，重新调用 `/using-upaseo <slug>` 时：
 1. **首先执行 Step 0 和 Step 0.1**：初始化目录、读取 learnings。
 2. 扫描 `.paseo/plans/<slug>.md` 确定当前处于哪一个未完成的迭代。
 3. 读取该迭代的 `iter_<N>_design_tasks.md` 文件；若遇到旧版历史文件 `iter_<N>_design.md`，先兼容读取，并在继续开发前迁移为 `iter_<N>_design_tasks.md`。

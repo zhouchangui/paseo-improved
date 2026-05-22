@@ -9,7 +9,7 @@ user-invocable: true
 
 # Upaseo Loop Skill
 
-A loop is a worker/verifier cycle: launch a worker → check verification → repeat until done or limits hit. Use for "keep trying", "babysit", or "watch this until X." This skill is a core primitive for the implement phase in `using-paseo`.
+A loop is a worker/verifier cycle: launch a worker → check verification → repeat until done or limits hit. Use for "keep trying", "babysit", or "watch this until X." This skill is a core primitive for the implement phase in `using-upaseo`.
 
 **User's arguments:** $ARGUMENTS
 
@@ -39,7 +39,7 @@ Loops are a CLI primitive: `paseo loop run`. Manage with `paseo loop ls`, `paseo
 
 1. Understand the user's intent from `$ARGUMENTS` and the conversation.
 2. **Worker prompt** — self-contained, concrete about what to do this iteration, explicit about what counts as progress. **若 Step 0.1 提取出了避障规则，必须将其作为 worker prompt 的硬性前缀注入。**
-3. **上下文文件强制读取指令**：如果本 loop 是由 `using-paseo` 的迭代流程触发，worker prompt 的第一条指令必须要求 worker 先通过 `view_file` 依次读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 的绝对路径（由调用方显式传入），再按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。
+3. **上下文文件强制读取指令**：如果本 loop 是由 `using-upaseo` 的迭代流程触发，worker prompt 的第一条指令必须要求 worker 先通过 `view_file` 依次读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 的绝对路径（由调用方显式传入），再按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。
 4. **Verification** — pick the right shape:
    - Shell check (`--verify-check`) for objective criteria a command can answer (`gh pr checks --fail-fast`, `npm test`).
    - Verifier prompt (`--verify`) for judgment ("Return done=true only if all tests pass and the changed files are coherent. Cite the command and the outcome.").
@@ -61,6 +61,6 @@ Loops are a CLI primitive: `paseo loop run`. Manage with `paseo loop ls`, `paseo
 
 ## Prompt rules
 
-**Worker** — self-contained, concrete (commands, files, branches, tests, PRs, systems), explicit about what counts as progress this iteration. **必须包含避障规则前缀（若有），并在由 using-paseo 触发时包含迭代设计文档、`architecture_constraints.md`、`coding_standards.md` 的强制读取指令。**
+**Worker** — self-contained, concrete (commands, files, branches, tests, PRs, systems), explicit about what counts as progress this iteration. **必须包含避障规则前缀（若有），并在由 using-upaseo 触发时包含迭代设计文档、`architecture_constraints.md`、`coding_standards.md` 的强制读取指令。**
 
 **Verifier** — checks facts, doesn't suggest fixes, cites commands/outputs/file evidence, specific about what "done" means. **必须包含合规检查：确认 worker 早期 tool call 中含有 view_file 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`。**

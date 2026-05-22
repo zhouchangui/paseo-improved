@@ -12,7 +12,7 @@
 - **paseo CLI 是运行时基座**：`paseo` 命令行工具（`paseo loop run` 等）属于底层运行时基础设施，不属于"外部技能依赖"范畴，允许依赖。
 - paseo 系列技能全部复制过来，允许拆分为多个独立技能，必须 **Rebrand 改名**（统一前缀 `upaseo-`）。
 - 通过 `ln -s` 软链接部署到 `~/.agents/skills/`，供所有 Agent 全局使用。
-- **入口职责分层**：`/using-paseo <task>` 是唯一完整开发生命周期入口；`upaseo` 只作为底层 Agent、Worktree、CLI、Provider 偏好和 daemon 调试参考，不承载计划、迭代、验收、发布等业务编排。
+- **入口职责分层**：`/using-upaseo <task>` 是唯一完整开发生命周期入口；`upaseo` 只作为底层 Agent、Worktree、CLI、Provider 偏好和 daemon 调试参考，不承载计划、迭代、验收、发布等业务编排。
 
 ---
 
@@ -166,7 +166,7 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
 
 为了在漫长且多迭代的开发中保持项目架构、接口、数据模型以及功能用例的一致性，彻底避免“重复造轮子”和旧组件架构腐化，Orchestrator 必须强制执行以下历史资产的闭环管控机制：
 
-1. **模板自愈初始化**：在 Step 0 偏好设置检查与目录初始化中，自动创建 `<项目根目录>/.paseo/story/` 目录。若对应的 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md`、`coding_standards.md` 文件不存在，自动使用 `using-paseo/references/` 下的模板文件进行复制和自愈。
+1. **模板自愈初始化**：在 Step 0 偏好设置检查与目录初始化中，自动创建 `<项目根目录>/.paseo/story/` 目录。若对应的 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md`、`coding_standards.md` 文件不存在，自动使用 `using-upaseo/references/` 下的模板文件进行复制和自愈。
 2. **前置强注入 (Asset Injection)**：
    - 在 Step 5.B 派生子 Agent 驱动实现时，主 Agent 在 `initialPrompt` 中**必须以绝对路径形式注入 `.paseo/story/` 下关联资产文件的地址**。
    - 强约束：子 Agent 必须将“**读取迭代设计文档、架构约束资产和编码规范资产**”作为启动后第一规程动作；随后再根据改动范围读取关联业务资产（若涉及功能故事修改读取 `stories.md`；若本次迭代包含 API 修改读取 `apis.md`；若涉及数据结构修改读取 `data_models.md`；若涉及包结构或页面路由读取 `modules.md`，以此类推）。
@@ -224,7 +224,7 @@ Orchestrator 在 Step 0.1 自动检查并创建所需目录结构：
 
 ### 4.2 强制前置读取
 
-- **每次任务启动时**（`using-paseo` 的 Step 0.1）必须先读取 `.paseo/learnings.jsonl`。
+- **每次任务启动时**（`using-upaseo` 的 Step 0.1）必须先读取 `.paseo/learnings.jsonl`。
 - **upaseo-loop 启动时**也必须先读取该文件，并将避障规则注入 worker prompt。
 - 读取后提炼的规则作为本次会话的全局硬约束。
 

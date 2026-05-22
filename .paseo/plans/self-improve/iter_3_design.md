@@ -4,7 +4,7 @@
 
 `upaseo/SKILL.md` 是所有 upaseo 技能的基座参考文档。当前缺少两个关键内容：
 1. **learnings 机制全局说明**：所有 upaseo 技能都应知道 `.paseo/learnings.jsonl` 的存在和作用，但 upaseo 基座中完全没有提及。
-2. **异常恢复规程**：upaseo 基座未描述 Agent 中断后如何恢复（这在 using-paseo 中有，但基座中应有一个简要引用，供独立使用 upaseo 技能的场景参考）。
+2. **异常恢复规程**：upaseo 基座未描述 Agent 中断后如何恢复（这在 using-upaseo 中有，但基座中应有一个简要引用，供独立使用 upaseo 技能的场景参考）。
 
 ## 极简技术方案
 
@@ -20,7 +20,7 @@
 约 5 行，简要说明：
 - 检查 `.paseo/plans/` 下是否有未完成的计划
 - 从上次中断点恢复
-- 引用 `using-paseo` 技能的 §异常恢复 获取完整流程
+- 引用 `using-upaseo` 技能的 §异常恢复 获取完整流程
 
 总预计增加 20 行，不修改任何现有内容。
 

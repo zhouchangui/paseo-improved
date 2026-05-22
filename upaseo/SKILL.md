@@ -1,18 +1,18 @@
 ---
 name: upaseo
-description: Foundation reference for Paseo agents, worktrees, CLI, provider preferences, and daemon operations. This is not the product development workflow entrypoint; use using-paseo for end-to-end development.
+description: Foundation reference for Paseo agents, worktrees, CLI, provider preferences, and daemon operations. This is not the product development workflow entrypoint; use using-upaseo for end-to-end development.
 ---
 
 # Upaseo Foundation Reference
 
 `upaseo` is the low-level foundation reference for skills that need to manage Paseo agents, worktrees, provider preferences, schedules, or daemon diagnostics. It is not a user-facing development workflow.
 
-For full product development tasks, use `/using-paseo <task>`. That workflow owns planning, iteration design, Design Council review, implementation loops, verification gates, story asset updates, review, and delivery.
+For full product development tasks, use `/using-upaseo <task>`. That workflow owns planning, iteration design, Design Council review, implementation loops, verification gates, story asset updates, review, and delivery.
 
 ## Scope Boundary
 
 - `upaseo` owns: daemon/CLI surface, agent and worktree primitives, provider preference format, async waiting rules, schedules, and debugging commands.
-- `using-paseo` owns: end-to-end development orchestration, quick/full mode selection, `.paseo/` asset initialization, iteration planning, plan-review council, `upaseo-loop` execution, validation gates, asset refresh, and session recovery.
+- `using-upaseo` owns: end-to-end development orchestration, quick/full mode selection, `.paseo/` asset initialization, iteration planning, plan-review council, `upaseo-loop` execution, validation gates, asset refresh, and session recovery.
 - Other upaseo skills should read this file only when they need low-level Paseo mechanics. They should not duplicate or reimplement the complete development lifecycle.
 
 Upaseo is backed by a daemon that supervises AI coding agents on your machine. Control it through tools or a CLI.
@@ -132,15 +132,15 @@ Debug order:
 
 ## Shared Learnings Format
 
-Workflow skills use the project-level `.paseo/learnings.jsonl` file for hard mitigation rules. `using-paseo` owns the lifecycle of this file; lower-level skills may read it when they are launched standalone or when they build worker prompts.
+Workflow skills use the project-level `.paseo/learnings.jsonl` file for hard mitigation rules. `using-upaseo` owns the lifecycle of this file; lower-level skills may read it when they are launched standalone or when they build worker prompts.
 
 文件格式为 JSON Lines，每条记录：
 ```json
 {"timestamp":"<ISO8601>","session_id":"<conversation-id>","category":"<command_error|wrong_assumption|tool_misuse|design_flaw>","failed_attempt":"<简述>","mitigation":"<应该怎么做>"}
 ```
 
-容量上限 30 条。超过时由 Orchestrator (`using-paseo`) 精炼合并旧条目。写入前去重。
+容量上限 30 条。超过时由 Orchestrator (`using-upaseo`) 精炼合并旧条目。写入前去重。
 
 ## Workflow Recovery Ownership
 
-Interrupted development workflow recovery belongs to `using-paseo`, because it owns `.paseo/plans/`, iteration state, validation gates, and asset refresh. `upaseo` only provides the agent/worktree/daemon primitives needed by that recovery flow.
+Interrupted development workflow recovery belongs to `using-upaseo`, because it owns `.paseo/plans/`, iteration state, validation gates, and asset refresh. `upaseo` only provides the agent/worktree/daemon primitives needed by that recovery flow.
