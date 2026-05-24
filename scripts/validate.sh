@@ -11,7 +11,7 @@ FAIL=0
 pass() { echo "  ✅ $1"; PASS=$((PASS+1)); }
 fail() { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 
-SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init)
+SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-goal upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init)
 ALL_SKILLS=("${SKILLS[@]}" using-upaseo)
 
 echo "=== 1. YAML name 字段校验 ==="

@@ -13,6 +13,7 @@
 | `upaseo-simplify` | PR 前代码极致精简 | 由 using-upaseo 自动调用 |
 | `upaseo-reviewer` | PR 前质量自审 | 由 using-upaseo 自动调用 |
 | `upaseo-init` | 项目初始化：自动构建 `.paseo/` 结构并逆向扫描提炼六大资产 | `/upaseo-init` |
+| `upaseo-goal` | Goal 合成器：把粗略描述整理成可执行、可验收的 goal，确认后启动 `/goal` | `/upaseo-goal <rough request>` |
 | `upaseo-ship` | PR 合并后的发布收尾：主干校验、资产固化、CHANGELOG、release metadata commit 与工作区清理 | `/upaseo-ship` |
 | `upaseo-advisor` | 单 Agent 二次意见 | `/upaseo-advisor <question>` |
 | `upaseo-committee` | 双 Agent 根因分析 | `/upaseo-committee <problem>` |
@@ -25,12 +26,12 @@
 cd /Users/zcg/workroot/paseo-improved
 
 # 1. 软链接到本地 Agent 运行环境
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.agents/skills/$skill
 done
 
 # 2. 软链接到 Antigravity 全局配置环境，以便在 / 中进行调用
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.gemini/config/skills/$skill
 done
 ```
@@ -49,6 +50,9 @@ done
 
 # 手动触发 Ship 自动化发布
 /upaseo-ship
+
+# 把粗略描述整理为 goal，确认后启动执行
+/upaseo-goal 想修一下登录页移动端体验
 ```
 
 ## 目录结构
@@ -76,6 +80,7 @@ paseo-improved/
 ├── upaseo-advisor/
 ├── upaseo-brainstorm/
 ├── upaseo-committee/
+├── upaseo-goal/                    # Goal 合成器：先确认，再启动 /goal
 ├── upaseo-handoff/
 ├── upaseo-init/                    # 项目初始化与逆向整理技能
 ├── upaseo-loop/
