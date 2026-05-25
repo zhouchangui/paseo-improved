@@ -100,6 +100,7 @@ paseo-improved/
 - **自主判定**：Agent 自动选择 quick/full 模式和 auto-advance/gate 网关
 - **轻量快速模式**：quick 仍创建最小主计划，并通过 bounded `upaseo-loop` 实现
 - **入口分层**：`/using-upaseo` 负责完整开发生命周期，`upaseo` 只提供底层 Agent/Worktree/CLI 参考
+- **Worktree 会话隔离**：`/using-upaseo --worktree` 创建隔离 worktree 后，必须通过 `/upaseo-handoff --worktree` 在新 worktree cwd 下重建接收会话；计划、实现、验证、提交都以新 worktree 为准
 - **发布分层**：`/using-upaseo` 负责创建 PR；PR 合并后由 `/upaseo-ship` 做发布校验和收尾
 - **日志优先验证**：验证以运行时日志为第一证据
 - **Gemini UI 专属**：UI/Styling 任务强制使用 Gemini 模型

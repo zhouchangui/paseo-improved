@@ -56,6 +56,9 @@ grep -q "Foundation Reference" "$ROOT/upaseo/SKILL.md" && pass "upaseo 明确为
 grep -q "not a user-facing development workflow\|not the product development workflow entrypoint" "$ROOT/upaseo/SKILL.md" && pass "upaseo 明确不是完整开发入口" || fail "upaseo 未声明非完整开发入口"
 grep -q "唯一的完整开发工作流入口" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 明确为唯一完整开发入口" || fail "using-upaseo 未声明唯一完整开发入口"
 grep -q "不得静默创建软链接" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 遵守 CLI 软链接需用户确认" || fail "using-upaseo 仍可能静默创建 CLI 软链接"
+grep -q "会话隔离硬规则" "$ROOT/using-upaseo/SKILL.md" && grep -q "/upaseo-handoff --worktree" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo --worktree 强制 handoff 到新 worktree 会话" || fail "using-upaseo --worktree 缺失 handoff 会话隔离规则"
+grep -q "Worktree 会话隔离" "$ROOT/README.md" && pass "README 记录 worktree 会话隔离机制" || fail "README 缺失 worktree 会话隔离机制"
+grep -q "/upaseo-handoff --worktree" "$ROOT/using-upaseo/references/params.md" && grep -q "/upaseo-handoff --worktree" "$ROOT/using-upaseo/references/quick-mode.md" && pass "参数与快速模式文档记录 worktree handoff 规则" || fail "参数或快速模式文档缺失 worktree handoff 规则"
 
 echo ""
 echo "=== 6. roles.md 关键规程检查 ==="

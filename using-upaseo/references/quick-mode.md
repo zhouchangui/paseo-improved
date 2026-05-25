@@ -17,6 +17,9 @@ Step 0.1: 前置读取 learnings.jsonl
 Step 0.2: 判定为快速模式 → 告知用户（一句话理由）
   │
   ▼
+若带 --worktree：创建隔离 worktree → /upaseo-handoff --worktree 到新 worktree 会话
+  │
+  ▼
 创建最小主计划 (.paseo/plans/<slug>.md)
   │
   ▼
@@ -52,3 +55,7 @@ checkpoint commit → 会话复盘 → PR/提交交付
 | 自主推进 | 不支持（必须用户确认） | 支持 auto-advance |
 | 自审 + 精简 | **同样执行** | 同样执行 |
 | 会话复盘 | **同样执行** | 同样执行 |
+
+## Worktree 隔离
+
+快速模式带 `--worktree` 时也必须遵守会话隔离：原会话只创建 worktree 并发起 `/upaseo-handoff --worktree`，接收 Agent 在新 worktree cwd 下创建/读取计划文件、执行轻量 `upaseo-loop`、验证和提交。严禁原会话继续在原仓库路径直接改代码。

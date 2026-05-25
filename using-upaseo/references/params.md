@@ -20,7 +20,7 @@
 
 | 参数 | 作用 | 默认行为（无参数时） |
 |:---|:---|:---|
-| `--worktree` | 使用 git worktree 隔离工作区 | 关闭 |
+| `--worktree` | 使用 git worktree 隔离工作区；创建后必须通过 `/upaseo-handoff --worktree` 在新 worktree cwd 下重建接收会话，后续计划/实现/验证/提交都在新会话中执行 | 关闭 |
 
 ## PR 策略参数
 

@@ -37,7 +37,7 @@ Step 0.2: 自主判定执行模式 (quick / full)
   └── [full 模式]
         │
         ▼
-      [Worktree] ──> Research ──> upaseo-brainstorm ──> 迭代分解规划
+      [Worktree] ──> upaseo-handoff 到新 worktree 会话 ──> Research ──> upaseo-brainstorm ──> 迭代分解规划
                                                                 │
        ┌──────────────────── 下一个迭代 ────────────────────────┘
        │
@@ -131,6 +131,9 @@ Step 0.2: 自主判定执行模式 (quick / full)
 ### 2. 准备工作区 (Worktree)
 - 若带有 `--worktree` 选项，优先通过 `upaseo` 接口创建一个独立的 git worktree 工作区，避免弄脏主分支。
 - **高追溯性命名规约**：创建的分支必须统一使用极简且具高辨识度的拼音/英文 slug 命名（如 `upaseo-feat-<task_slug>` 格式），物理 worktree 目录物理隔离在主仓库平级目录下（如 `../paseo-improved_upaseo-feat-<task_slug>`），绝不在临时路径堆积磁盘垃圾。
+- **会话隔离硬规则**：带有 `--worktree` 时，创建 worktree 后必须立即使用 `/upaseo-handoff --worktree` 在该 worktree 的 cwd 下启动全新的接收 Agent。原 Orchestrator 只负责创建隔离工作区、生成/指向 handoff 移交文档，并把任务计划的 Source of Truth 交给新会话；不得继续在原工作区直接 Research、Brainstorm、Loop 实现、验证或提交。
+- **计划落点规则**：`--worktree` 模式下，主计划 `.paseo/plans/<slug>.md`、迭代设计文档和 `.paseo/handoffs/<handoff>.md` 的权威副本必须位于新 worktree 内，并在 handoff prompt 中使用新 worktree 的绝对路径。接收 Agent 启动后的第一步必须读取 handoff 移交文档，再读取主计划/迭代设计文档。
+- **防混淆规则**：原仓库路径只能作为创建 worktree 与发起 handoff 的启动上下文；一旦 handoff 创建成功，后续 `git diff`、checkpoint commit、验证日志、PR/提交都必须发生在新 worktree 路径中。若无法确认当前 cwd 是新 worktree，必须暂停并向用户说明，严禁猜测执行。
 
 ### 3. 头脑风暴前置 (upaseo-brainstorm) — 仅完整仪式模式
 - 在制定整体技术计划前，**强制加载并运行本地的 `upaseo-brainstorm` 技能**。
