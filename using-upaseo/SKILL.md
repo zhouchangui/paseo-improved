@@ -130,6 +130,7 @@ Step 0.2: 自主判定执行模式 (quick / full)
 
 ### 2. 准备工作区 (Worktree)
 - 若带有 `--worktree` 选项，优先通过 `upaseo` 接口创建一个独立的 git worktree 工作区，避免弄脏主分支。
+- **高追溯性命名规约**：创建的分支必须统一使用极简且具高辨识度的拼音/英文 slug 命名（如 `upaseo-feat-<task_slug>` 格式），物理 worktree 目录物理隔离在主仓库平级目录下（如 `../paseo-improved_upaseo-feat-<task_slug>`），绝不在临时路径堆积磁盘垃圾。
 
 ### 3. 头脑风暴前置 (upaseo-brainstorm) — 仅完整仪式模式
 - 在制定整体技术计划前，**强制加载并运行本地的 `upaseo-brainstorm` 技能**。
@@ -164,18 +165,13 @@ Step 0.2: 自主判定执行模式 (quick / full)
      - `manual` 或 `agent-run`（通过操作电脑，运行特定脚本或查看终端输出验证）。
    - **用户手动验证具体步骤**：为用户编写一行明晰、无门槛的手动验证命令或操作步骤。
 
-#### B. 迭代计划评审会（架构/功能/测试博弈，硬性规定）
+#### B. 迭代计划评审会（架构/功能/测试自适应评审，硬性规定）
 
-在任何实现类子 Agent 启动前，Orchestrator 必须围绕本轮 `iter_<N>_design_tasks.md` 草案组织 1-2 轮计划评审会。评审会可以派生只读子 Agent，也可以由主 Agent 明确扮演以下角色，但必须在计划文件中记录各角色意见与修正结论：
-1. **architecture-designer**：审查架构边界、模块归属、依赖方向、数据流和是否违反 `architecture_constraints.md`。
-2. **feature-designer**：审查用户故事、功能边界、交互/业务行为、与既有 `stories.md` 和 `modules.md` 的一致性。
-3. **test-strategist**：审查验收标准是否可执行、日志/测试/browser/manual 验证路径是否闭环、失败条件是否明确。
-
-评审流程：
-1. **Round 1**：三个角色分别基于迭代草案、`architecture_constraints.md`、`coding_standards.md` 以及相关业务资产提出阻塞问题、风险和具体修改建议。
-2. **修正草案**：Orchestrator 将被采纳的意见写回 `iter_<N>_design_tasks.md`，至少补齐功能边界、架构决策、验收标准、测试证据和不做事项。
-3. **Round 2（条件触发）**：若 Round 1 存在阻塞问题、验收不可执行、架构边界不清或角色意见冲突，必须再进行一轮复审；若仍无法收敛，暂停并向用户提交争议点。
-4. **定稿门槛**：计划文件必须追加 `Design Council Log` 段落，记录每个角色的关键意见、采纳/拒绝理由、最终验收标准。没有该段落或存在未解决阻塞项时，严禁进入实现。
+在任何实现类子 Agent 启动前，Orchestrator 必须围绕本轮 `iter_<N>_design_tasks.md` 草案组织评审会：
+- **自适应评审会分级**（轻重自适应以降低流程阻力）：
+  - **低风险任务**（仅涉及局部文件修改、简单样式微调或文案配置变动）：跳过三个角色扮演与多轮辩论，由 Orchestrator 直接进行一份**自检清单（Mini Checklist）**核对并记录在设计文档的 `Mini Checklist Log` 中，瞬间定稿。
+  - **高风险任务**（涉及数据库表 Schema 变更、新增公共 API 路由或核心公共依赖重塑）：强制组织 `architecture-designer`、`feature-designer` 与 `test-strategist` 开展 1-2 轮评审会，定稿时在计划文件中追加 **Design Council Log** 记录每个角色的关键意见、采纳/拒绝理由、最终验收标准。
+- 没有定稿日志或存在未解决阻塞项时，严禁进入实现。
 
 #### C. 强制使用 `upaseo-loop` 驱动实现（含精简上下文传递）
 
@@ -209,15 +205,15 @@ Orchestrator 在 `initialPrompt` 中必须：
 - 如果这是 UI 或 Styling 改动，**强制要求 `upaseo-loop` 的 worker 只能使用 Gemini 模型**。
 - TDD 模式推进：先写失败测试/日志埋点，再让它跑通。
 
-#### D. 子 Agent 完工通知与主计划状态同步（硬性规定）
+#### D. 子 Agent 完工通知与主计划状态同步（文件即上下文，实时记录）
 
 当子 Agent 完成阶段性任务并发出完工通知时，**主 Agent (Orchestrator) 必须执行以下同步规程，在完成之前不得执行任何后续动作**：
 
 1. **读取子 Agent 交付产出**：查看子 Agent 的最终报告或直接 `view_file` 读取受影响的关键文件。
-2. **立即记录实现完成状态**：在主计划文件的 `Progress Notes` 段落中追加“实现完成，等待验证”的核心说明；此时不得把路线图勾选为 `[x]`，因为 `[x]` 仅代表验证和必要用户网关都已经通过。
-3. **受阻状态同步**：若子 Agent 报告 blocked 或实现结果不可验证，必须在 `.paseo/plans/<slug>.md` 中将当前迭代标记为 `[!]` 并留在本迭代修复。
-4. **保存主计划文件后，方可进入后续流程**。
-5. **记录待刷新资产范围**：主 Agent 初步分析本轮变更可能影响的故事、数据模型、API、模块、架构约束或编码规范；但在验证和必要用户网关通过之前，不得正式写入 `.paseo/story/` 资产。
+2. **立即持久化记录状态（文件即上下文）**：主 Agent 不依赖自身 memory，必须**立即、实时地将当前执行状态与中间证据持久化写入主计划文件 `.paseo/plans/<slug>.md`**。在 `Progress Notes` 段落中追加“实现完成，等待验证”的精确说明。同时在主计划或迭代设计文档中显式声明当前的业务 `State`（例如 `State: Verifying`），便于断电恢复。此时不得把路线图勾选为 `[x]`。
+3. **受阻状态同步**：若子 Agent 报告 blocked 或实现结果不可验证，必须在 `.paseo/plans/<slug>.md` 中将当前迭代标记为 `[!]` 并将 `State` 更新为 `State: Blocked`，留在本迭代修复。
+4. **保存计划文件后，方可进入后续流程**。
+5. **记录待刷新资产范围**：主 Agent 分析本轮变更可能影响的资产文件（如 `stories.md` , `data_models.md` 等），但验证通过前，严禁将其写入 `.paseo/story/` 资产。
 
 > **严禁**：子 Agent 完工后直接跳到下一阶段而不记录主计划执行状态；验证通过前严禁提前将路线图标记为 `[x]`。
 
@@ -243,15 +239,16 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 **自动推进时：**
 - 在主计划文件中记录 `[auto-advanced]` 标记及验证证据摘要。
-- 执行增量历史资产刷新：若本轮新增或修改了前后台用户功能点用例、数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录、前端展示页面路由、架构约束或编码规范，必须由主 Agent 或 `story-updater` 更新 `.paseo/story/` 对应文件，并以 `* [Updated in Iter <N>]` 作为前缀。
-- 将当前迭代路线图状态更新为 `[x]`，并创建本迭代 checkpoint commit，记录 commit hash 后方可进入下一迭代。
+- **资产防事实漂移校验 (Diff-Asset Validation)**：在增量刷新资产前，主 Agent 必须对比 `git diff` 与 `iter_N_design_tasks.md`，进行严格的一致性审计。**确保只有确实在代码中被实现并验证通过的用例和结构变更，才允许增量更新写入核心历史资产**，严防空头承诺和设计漂移。
+- 校验通过后，执行增量历史资产刷新：若本轮新增或修改了前后台用户功能点用例、数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录、前端展示页面路由、架构约束或编码规范，必须由主 Agent 或 `story-updater` 更新 `.paseo/story/` 对应文件，并以 `* [Updated in Iter <N>]` 作为前缀。
+- 将当前迭代路线图状态更新为 `[x]`，更新计划文件中的 `State: Completed`（或在多迭代下标记 `State: Next_Iteration_Start`），并创建本迭代高追溯性命名（如 `checkpoint-iter-<N>`）的 checkpoint commit，记录 commit hash 后方可进入下一迭代。
 - 用户可随时要求回溯查看。
 
 **等待用户时，向用户展示：**
 1. 本迭代完成的成果。
 2. 捕获到的关键**日志输出片段/验证结果**。
 3. 指导用户自行操作的**手动验证步骤**。
-4. 等待用户回复"验证通过"后，将当前迭代路线图状态更新为 `[x]`，执行必要的增量历史资产刷新，创建本迭代 checkpoint commit，记录 commit hash 后方可继续。若不通过，留在本迭代修复。
+4. 等待用户回复"验证通过"后，将当前迭代路线图状态更新为 `[x]`。先执行**资产防事实漂移校验**，校验通过后执行必要的增量历史资产刷新，标记计划文件 `State`，创建高追溯性命名的 checkpoint commit，记录 commit hash 后方可继续。若不通过，留在本迭代修复。
 
 #### G. 回滚机制 (Rollback)
 
@@ -277,9 +274,9 @@ Orchestrator 在 `initialPrompt` 中必须：
    - 进行质量、边界防御、并发安全和代码坏味道自审，生成自审确认表。
    - 自审发现任何缺陷，必须在本地 100% 闭环修复。
 
-3. **创建 PR 并交付**：
-   - 在 worktree 中进行整洁提交，运行 `gh pr create` 提交 PR。
-   - 将 PR 链接和自审报告呈给用户。
+3. **创建 PR 并交付 (PR Fallback 智能兜底)**：
+   - 在 worktree 中进行整洁提交（Git commit），然后尝试运行 `gh pr create` 提交 PR，将 PR 链接和自审报告呈给用户。
+   - **PR 智能兜底 (PR Fallback)**：如果本地环境未安装 `gh` CLI 命令行、网络阻断或未授权登录导致 PR 创建失败，系统**必须智能且温和地降级为本地提交模式**。自动在当前临时分支或主干创建一个语义整洁的 Commit 后，清晰打印引导：“*本地 gh CLI 未授权或缺失，已为您在本地完成整洁 Commit，请您手动执行 git push / 提交 PR。*”
    - **最终 PR 阶段必须等待用户审批**，不可自动合并。
    - `using-upaseo` 到 PR 创建与用户审批为止；用户确认并合并 PR 后，必须手动运行 `/upaseo-ship` 完成发布校验、资产固化、CHANGELOG 和 worktree/分支清理。
 
@@ -305,9 +302,15 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 ---
 
-## 异常恢复 (Resumability)
-若执行过程中中断，重新调用 `/using-upaseo <slug>` 时：
-1. **首先执行 Step 0 和 Step 0.1**：初始化目录、读取 learnings。
-2. 扫描 `.paseo/plans/<slug>.md` 确定当前处于哪一个未完成的迭代。
-3. 读取该迭代的 `iter_<N>_design_tasks.md` 文件；若遇到旧版历史文件 `iter_<N>_design.md`，先兼容读取，并在继续开发前迁移为 `iter_<N>_design_tasks.md`。
-4. 从对应的"设计"、"upaseo-loop 实现"、"日志验证"或"用户验证网关"现场无缝恢复执行。
+## 异常恢复 (Resumability & Self-healing)
+
+如果执行过程中意外中断（如服务器重启、Token 耗尽），重新调用 `/using-upaseo <slug>` 时，系统必须遵循“文件即上下文”理念进行秒级无感现场自愈恢复：
+
+1. **启动首步必读（自愈凭证）**：Orchestrator 唤醒后，**第一步且必须**优先 `view_file` 读取主计划 `.paseo/plans/<slug>.md` 以及当前未完成迭代的 `iter_<N>_design_tasks.md`（若遇到旧版历史文件 `iter_<N>_design.md`，亦须兼容读取，并在继续开发前自动迁移为 `iter_<N>_design_tasks.md`），以此作为重建现场的唯一权威上下文。
+2. **自愈状态机现场复原**：根据文件中持久化登记的 `State` 字段与路线图状态，自动引导进入对应的操作阶段：
+   - `State: Designing` $\rightarrow$ 自动读取并恢复迭代设计草案编写与评审会阶段。
+   - `State: Implementing` $\rightarrow$ 自动派生子 Agent，直接唤醒并调度 `upaseo-loop` 继续驱动实现，还原 Worker 现场。
+   - `State: Verifying` $\rightarrow$ 自动进入日志与测试优先验证阶段。
+   - `State: Waiting_Gate` $\rightarrow$ 重新为用户渲染手动验证步骤，恢复等待用户验证网关。
+   - `State: Completed` / `State: Next_Iteration_Start` $\rightarrow$ 自动推进至下一迭代或自理自审交付阶段。
+3. **流程恢复宣告**：Orchestrator 成功恢复现场后，需向用户发送一句话极简说明（如：“*检测到 Iteration 1 在断电前处于 Implementing 状态，现场已完美还原，正继续驱动子 Agent 实现...*”），全程对用户零心智负担。

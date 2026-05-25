@@ -95,6 +95,16 @@ grep -q "checkpoint commit" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 
 grep -q "iter_<N>_design.md" "$ROOT/using-upaseo/SKILL.md" && pass "恢复流程兼容旧版 iter_N_design.md" || fail "恢复流程缺失旧计划文件兼容"
 
 echo ""
+echo "=== 7.3 文件即上下文与高稳健性架构校验 ==="
+grep -q "文件即上下文" "$ROOT/using-upaseo/SKILL.md" && pass "SKILL.md 包含文件即上下文规约" || fail "SKILL.md 缺失文件即上下文规约"
+grep -q "State: Designing\|State: Implementing\|State: Verifying" "$ROOT/using-upaseo/SKILL.md" && pass "SKILL.md 断电现场现场恢复自愈状态机完整" || fail "SKILL.md 缺失断电现场恢复状态机"
+grep -q "自适应评审会分级" "$ROOT/using-upaseo/SKILL.md" && pass "SKILL.md 包含自适应评审会分级（轻重自适应）" || fail "SKILL.md 缺失评审会自适应分级规程"
+grep -q "PR Fallback" "$ROOT/using-upaseo/SKILL.md" && pass "SKILL.md 包含 PR Fallback 智能兜底机制" || fail "SKILL.md 缺失 PR 智能兜底机制"
+grep -q "资产防事实漂移" "$ROOT/using-upaseo/SKILL.md" && pass "SKILL.md 包含资产防事实漂移校验（Diff-Asset）" || fail "SKILL.md 缺失防资产漂移校验"
+grep -q "文件即上下文" "$ROOT/using-upaseo/references/roles.md" && pass "roles.md 的 Orchestrator 职责包含文件即上下文" || fail "roles.md 缺失编排器文件即上下文要求"
+grep -q "文件即上下文" "$ROOT/requirement.md" && pass "requirement.md 涵盖文件即上下文极简开发理念" || fail "requirement.md 缺失文件即上下文规范"
+
+echo ""
 echo "=== 8. upaseo-ship 核心发布规程校验 ==="
 ship_roles="$ROOT/upaseo-ship/references/roles.md"
 ship_skill="$ROOT/upaseo-ship/SKILL.md"
