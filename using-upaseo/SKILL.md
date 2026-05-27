@@ -2,8 +2,8 @@
 name: using-upaseo
 description: >-
   核心开发工作流编排技能。运行重度开发任务的生命周期管理，内置自主复杂度判定、
-  增量式迭代推进、独立迭代设计文档、自主推进/用户验证网关、实现阶段强制
-  upaseo-loop、UI 强制 Gemini、优先日志验证、PR 提交前强制自审简化、
+  微改快速通道、增量式迭代推进、独立迭代设计文档、自主推进/用户验证网关、
+  风险分级 upaseo-loop、UI 强制 Gemini、优先日志验证、PR 提交前强制自审简化、
   会话复盘与避障学习落盘。
 user-invocable: true
 argument-hint: "[--quick|--full] [--autopilot|--gate] [--worktree] [--pr-per-iteration] <task>"
@@ -11,7 +11,7 @@ argument-hint: "[--quick|--full] [--autopilot|--gate] [--worktree] [--pr-per-ite
 
 # Using Upaseo (核心开发工作流技能)
 
-本技能为唯一的完整开发工作流入口。它将一项任务在完全本地化的 `upaseo` 基座上驱动，严格通过：**避障前置 → 自主复杂度判定 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 强制 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
+本技能为唯一的完整开发工作流入口。它将一项任务在完全本地化的 `upaseo` 基座上驱动，严格通过：**避障前置 → 自主复杂度与风险判定 → 微改快速通道或 quick/full 模式 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 风险分级 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
 
 **User's request:** $ARGUMENTS
 
@@ -30,7 +30,9 @@ argument-hint: "[--quick|--full] [--autopilot|--gate] [--worktree] [--pr-per-ite
 ```
 Step 0: 偏好读取 + .paseo/ 目录初始化
 Step 0.1: 前置读取 .paseo/learnings.jsonl (避障)
-Step 0.2: 自主判定执行模式 (quick / full)
+Step 0.2: 自主判定执行模式 (micro / quick / full)
+  │
+  ├── [micro 微改] ──> Micro-Change Decision → 直接手术刀式修改 → 最小确定性验证 → 简短交付
   │
   ├── [quick 模式] ──> 最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 验证 → 提交
   │
@@ -100,13 +102,21 @@ Step 0.2: 自主判定执行模式 (quick / full)
 
 > **示例**：若 `learnings.jsonl` 中有一条 `{"category": "command_error", "mitigation": "docker compose 必须指定 -p dingding"}`，则本会话中所有涉及 `docker compose` 的命令都必须自动附加 `-p dingding`。
 
-### 0.2 自主复杂度判定 (Complexity Auto-Assessment)
+### 0.2 自主复杂度与风险判定 (Complexity and Risk Auto-Assessment)
 
-**Agent 必须在此步骤自主评估任务复杂度，自动选择执行模式。用户可通过 `--quick` / `--full` 参数强制覆盖。**
+**Agent 必须在此步骤自主评估任务复杂度与风险等级，自动选择执行模式。用户可通过 `--quick` / `--full` 参数强制覆盖 quick/full 判定；若用户明确要求 TDD、loop 或完整仪式，则不得走微改快速通道。**
 
 **自动判定规则：**
 
-当任务满足以下**全部**条件时，自动进入**快速模式**：
+当任务满足以下**全部**条件时，自动进入**微改快速通道**：
+- 预估改动范围 ≤ 2 个文件，且改动可以通过人工 diff 审查完整理解
+- 只涉及文案、注释、文档、格式、无行为影响的样式微调，或机械性重命名/拼写修正
+- 不改变运行时逻辑、控制流、数据结构、公共 API、权限、安全、计费、并发、持久化、构建/部署流程或测试语义
+- Agent 对预期结果有确定性，且无需新增测试才能证明行为正确
+
+微改快速通道允许跳过新增失败测试、跳过 `upaseo-loop`、跳过最小主计划和迭代设计文档，但必须在执行前给出一句 `Micro-Change Decision`，说明为什么风险足够低；执行后必须做最小确定性验证（如 diff 审查、格式/文档校验、现有窄域检查）。一旦发现实际改动超出上述边界，必须立即升级到快速模式或完整仪式模式。
+
+当任务不满足微改快速通道，但满足以下**全部**条件时，自动进入**快速模式**：
 - 预估改动范围 ≤ 3 个文件
 - 不涉及架构调整或新增模块
 - 任务意图明确、无需与用户收敛设计方向（如 Bug 修复、样式微调、配置变更、文案修改）
@@ -115,10 +125,11 @@ Step 0.2: 自主判定执行模式 (quick / full)
 
 | 模式 | 触发方式 | 流程 |
 |:---|:---|:---|
+| 微改快速通道 | Agent 风险判定 / 非 `--full` / 用户未要求 TDD | Micro-Change Decision → 直接手术刀式修改 → 最小确定性验证 → 简短交付 |
 | 完整仪式 | 自动判定 / `--full` 强制 | 脑暴 → 迭代拆分 → 每迭代计划评审会 → Loop 实现 → Gate/Auto → 自审 → PR |
 | 快速模式 | 自动判定 / `--quick` 强制 | 跳过脑暴，最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 日志验证 → 用户确认 → 提交 |
 
-**Agent 选择模式后，必须在执行前向用户简要说明判定理由（一句话），用户可随时纠正。**
+**Agent 选择模式后，必须在执行前向用户简要说明判定理由（一句话），用户可随时纠正。无法确定风险等级时，必须保守升级，不得走微改快速通道。**
 
 > **快速模式详细流程**参见 `references/quick-mode.md`。**参数与判定规则完整定义**参见 `references/params.md`。
 
@@ -176,7 +187,9 @@ Step 0.2: 自主判定执行模式 (quick / full)
   - **高风险任务**（涉及数据库表 Schema 变更、新增公共 API 路由或核心公共依赖重塑）：强制组织 `architecture-designer`、`feature-designer` 与 `test-strategist` 开展 1-2 轮评审会，定稿时在计划文件中追加 **Design Council Log** 记录每个角色的关键意见、采纳/拒绝理由、最终验收标准。
 - 没有定稿日志或存在未解决阻塞项时，严禁进入实现。
 
-#### C. 强制使用 `upaseo-loop` 驱动实现（含精简上下文传递）
+#### C. 风险分级使用 `upaseo-loop` 驱动实现（含精简上下文传递）
+
+若当前任务已在 Step 0.2 被判定为**微改快速通道**，本节整体跳过：不派生实现子 Agent，不新增失败测试，不启动 `upaseo-loop`。Orchestrator 直接执行手术刀式修改，并在最终报告中记录 `Micro-Change Decision`、变更范围和最小确定性验证结果。若修改过程中发现任一风险边界被突破，必须立即停止微改路径并升级到 quick/full 流程。
 
 **派生子 Agent 的上下文传递规则（硬性规定）：**
 
@@ -204,9 +217,9 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 硬性读取顺序：先读取迭代设计文档，再读取 `architecture_constraints.md` 和 `coding_standards.md`，然后按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。严禁跳过这些启动读取动作。严禁违反已有的核心历史开发资产、架构约束和编码规范进行重复造轮子、破坏性重构或风格漂移。
 
-- 启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码；快速模式也必须使用轻量 loop（建议 `max-iterations <= 3`），不得由 Agent 直接绕过 loop 自行修改。
+- 除微改快速通道外，启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码；快速模式也必须使用轻量 loop（建议 `max-iterations <= 3`），不得由 Agent 直接绕过 loop 自行修改。
 - 如果这是 UI 或 Styling 改动，**强制要求 `upaseo-loop` 的 worker 只能使用 Gemini 模型**。
-- TDD 模式推进：先写失败测试/日志埋点，再让它跑通。
+- TDD 模式只用于有行为风险、验收不确定或需要锁定回归的改动：先写失败测试/日志埋点，再让它跑通。微改快速通道不得为了“走流程”新增低价值测试。
 
 #### D. 子 Agent 完工通知与主计划状态同步（文件即上下文，实时记录）
 

@@ -3,3 +3,4 @@
 *.swo
 *~
 .paseo/learnings.jsonl
+.paseo/compacts/

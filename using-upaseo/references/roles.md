@@ -39,7 +39,8 @@ Auditor 用自然语言报告即可，但必须包含：验证结论（pass/fail
 | 类型 (Type) | 作用 | 派生角色 | 强制工具与 Provider 约束 |
 | :--- | :--- | :--- | :--- |
 | `refactor` | 重塑已有代码，为下阶段迭代特征做行为等价的铺垫。 | `refactorer` | 必须通过 `upaseo-loop` 自动验证运行，直到 parity test 通过。 |
-| `implement` | 增量功能编写。 | `impl` | 必须强制使用 `upaseo-loop` 工具循环自动跑通验证。 |
+| `micro-change` | 确定性微改：文案、注释、文档、格式、无行为影响样式或机械修正。 | Orchestrator | 记录 `Micro-Change Decision`，跳过 TDD/loop，用最小确定性验证收尾；风险不确定即升级。 |
+| `implement` | 增量功能编写。 | `impl` | 除 `micro-change` 外，必须使用 `upaseo-loop` 工具循环自动跑通验证。 |
 | `ui-design` | 页面视觉、组件样式及 UX 重塑。 | `ui-impl` | **Provider 强制只能使用 Gemini 系列模型**。必须使用 `upaseo-loop`。 |
 | `plan-review` | 迭代实现前的计划博弈和验收定稿。 | `architecture-designer` / `feature-designer` / `test-strategist` | 必须围绕 `iter_N_design_tasks.md` 进行 1-2 轮反馈并写入 `Design Council Log`。 |
 | `verify` | 迭代验收或最后的整体大验收。 | `auditor` | **优先日志验证 (Log-Based Verification)**。 |
@@ -97,7 +98,7 @@ Auditor 用自然语言报告即可，但必须包含：验证结论（pass/fail
 - **职责**：开发增量迭代功能。
 - **首步**：通过 `view_file` 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`。
 - **核心要求**：
-  - 必须工作于 `upaseo-loop` 下，遵守 TDD 规范。
+  - 除已记录 `Micro-Change Decision` 的确定性微改外，必须工作于 `upaseo-loop` 下；有行为风险、验收不确定或需要锁定回归时遵守 TDD 规范。
   - **优先日志输出**：在编写代码时，必须主动、规范地埋入可支持后续"日志优先验证"的生命周期和关键业务逻辑 Debug 日志。
   - 手术刀式修改：绝不触碰无关文件。
 

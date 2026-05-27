@@ -18,6 +18,7 @@
 | `upaseo-advisor` | 单 Agent 二次意见 | `/upaseo-advisor <question>` |
 | `upaseo-committee` | 双 Agent 根因分析 | `/upaseo-committee <problem>` |
 | `upaseo-handoff` | 任务完整移交 | `/upaseo-handoff <task>` |
+| `upaseo-compact` | 上下文压缩与恢复提示词 | `/upaseo-compact <optional focus>` |
 
 ## 安装
 
@@ -26,12 +27,12 @@
 cd /Users/zcg/workroot/paseo-improved
 
 # 1. 软链接到本地 Agent 运行环境
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.agents/skills/$skill
 done
 
 # 2. 软链接到 Antigravity 全局配置环境，以便在 / 中进行调用
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.gemini/config/skills/$skill
 done
 ```
@@ -53,6 +54,9 @@ done
 
 # 把粗略描述整理为 goal，确认后启动执行
 /upaseo-goal 想修一下登录页移动端体验
+
+# 压缩当前上下文并生成恢复提示词
+/upaseo-compact 当前技能开发现场
 ```
 
 ## 目录结构
@@ -62,6 +66,7 @@ paseo-improved/
 ├── .gitignore
 ├── .paseo/                         # 运行时数据（learnings 不入库）
 │   ├── learnings.jsonl             # 避障学习记录
+│   ├── compacts/                   # 上下文压缩与恢复文档
 │   ├── plans/                      # 计划文件 (Source of Truth)
 │   │   ├── <slug>.md
 │   │   └── <slug>/
@@ -74,12 +79,18 @@ paseo-improved/
 │       ├── architecture_constraints.md
 │       └── coding_standards.md
 ├── requirement.md                  # 需求文档
+├── .codex/
+│   ├── hooks.json                  # 项目级 Codex hooks（PreCompact / PostCompact）
+│   └── hooks/
+│       ├── pre-compact.mjs
+│       └── post-compact.mjs
 ├── scripts/
 │   └── validate.sh                 # 自动化一致性验证
 ├── upaseo/                         # 基座技能
 ├── upaseo-advisor/
 ├── upaseo-brainstorm/
 ├── upaseo-committee/
+├── upaseo-compact/                 # 上下文压缩与恢复提示词技能
 ├── upaseo-goal/                    # Goal 合成器：先确认，再启动 /goal
 ├── upaseo-handoff/
 ├── upaseo-init/                    # 项目初始化与逆向整理技能
@@ -97,8 +108,11 @@ paseo-improved/
 ## 核心机制
 
 - **避障学习**：`.paseo/learnings.jsonl` — 所有技能启动时读取，容量上限 30 条
-- **自主判定**：Agent 自动选择 quick/full 模式和 auto-advance/gate 网关
-- **轻量快速模式**：quick 仍创建最小主计划，并通过 bounded `upaseo-loop` 实现
+- **上下文压缩**：`/upaseo-compact` 会先检查并自愈当前仓库的 compact hooks，再创建 `.paseo/compacts/` 恢复文档并输出恢复提示词，替代系统 compact 的低保真摘要
+- **安全自动 compact**：仓库内 `.codex/hooks.json` 只在当前 repo 启用 `PreCompact` / `PostCompact`，自动保存现场并在 compact 后提示恢复，不修改全局 Codex 行为
+- **自主判定**：Agent 自动选择 micro/quick/full 模式和 auto-advance/gate 网关
+- **微改快速通道**：确定性文案、注释、文档、格式、无行为影响样式或机械修正可跳过 TDD/loop，只做最小确定性验证
+- **轻量快速模式**：quick 仍创建最小主计划，并通过 bounded `upaseo-loop` 实现有行为风险的小改动
 - **入口分层**：`/using-upaseo` 负责完整开发生命周期，`upaseo` 只提供底层 Agent/Worktree/CLI 参考
 - **Worktree 会话隔离**：`/using-upaseo --worktree` 创建隔离 worktree 后，必须通过 `/upaseo-handoff --worktree` 在新 worktree cwd 下重建接收会话；计划、实现、验证、提交都以新 worktree 为准
 - **发布分层**：`/using-upaseo` 负责创建 PR；PR 合并后由 `/upaseo-ship` 做发布校验和收尾
