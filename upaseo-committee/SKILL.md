@@ -1,7 +1,6 @@
 ---
 name: upaseo-committee
 description: Form a committee of two high-reasoning agents to step back, do root cause analysis, and produce a plan. Use when stuck, looping, tunnel-visioning, or facing a hard planning problem.
-user-invocable: true
 ---
 
 # Upaseo Committee Skill
@@ -33,8 +32,8 @@ Override only when the user explicitly asks for different members.
   This is analysis only. Do NOT edit, create, or delete any files. Do NOT write code.
   ```
 
-- **Trust the wait.** Do not poll, send hurry-ups, or interrupt. GPT-5.4 can reason 15–30 minutes; Opus does extended thinking. Long waits mean it found something worth thinking about.
-- **You are the middleman.** Drive plan → implement → review without yielding to the user, except for divergences that need their call.
+- **Trust the wait.** Launch members with `background: true` and `notifyOnFinish: true` unless the user explicitly asks for foreground execution. Do not poll, send hurry-ups, or interrupt. GPT-5.4 can reason 15–30 minutes; Opus does extended thinking. Long waits mean it found something worth thinking about.
+- **You are the middleman.** Drive plan → implement → review inside the user-approved scope. Ask the user only when the committee materially changes product intent, risk tolerance, scope, or trade-off direction.
 
 ## 前置避障读取
 
@@ -61,7 +60,7 @@ Write a problem-level prompt:
 - Explicit: "use think-harder — state assumptions, ask why three levels deep, check whether you're patching a symptom or removing the problem"
 - **上下文文件**：若有主计划文件或迭代设计文档，在 prompt 中附带绝对路径，要求 committee 成员首步使用 `view_file` 读取后再开始分析。
 
-Create both agents in parallel via Paseo with `[Committee] <task>` titles and the same prompt. Wait for both — not just whichever finishes first.
+Create both agents in parallel via Paseo with `[Committee] <task>` titles and the same prompt. Resume synthesis only after both completion notifications arrive — not just whichever finishes first.
 
 Read both responses. Challenge them — do not accept at face value:
 

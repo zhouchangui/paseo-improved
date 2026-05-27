@@ -15,6 +15,10 @@ For full product development tasks, use `/using-upaseo <task>`. That workflow ow
 - `using-upaseo` owns: end-to-end development orchestration, quick/full mode selection, `.paseo/` asset initialization, iteration planning, plan-review council, `upaseo-loop` execution, validation gates, asset refresh, and session recovery.
 - Other upaseo skills should read this file only when they need low-level Paseo mechanics. They should not duplicate or reimplement the complete development lifecycle.
 
+## Host Tool Compatibility
+
+Some skill prompts say `view_file` because many receiving agents expose that exact read tool. Treat it as a semantic requirement, not a hard dependency on one host API: if the current agent runtime names the read primitive differently, use the nearest non-mutating file read tool (`read_file`, `cat`, `sed`, editor read, or equivalent). When writing prompts for child agents, keep the wording explicit: they must read the listed files before acting, using whatever file-read tool their runtime provides.
+
 Upaseo is backed by a daemon that supervises AI coding agents on your machine. Control it through tools or a CLI.
 
 ## Worktrees

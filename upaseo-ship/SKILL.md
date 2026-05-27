@@ -3,9 +3,7 @@ name: upaseo-ship
 description: >-
   本地发布与收尾交付技能。在 PR 已被批准并合并后由用户手动调用，处理主干发布校验、
   历史开发资产版本正式化(Story Release)、Release metadata commit、物理工作区与临时分支清理，
-  以及 CHANGELOG 生成。
-user-invocable: true
-argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
+  以及 CHANGELOG 生成。Use with optional version, keep-worktree, or dry-run arguments after PR approval and merge.
 ---
 
 # Upaseo Ship (本地发布与收尾交付技能)
@@ -44,16 +42,19 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
    - 检查当前分支是否为核心开发分支，是否已经包含已合并 PR 的最新提交。
    - 检查当前本地分支是否有未提交的更改。如果工作区不干净，提示用户提交或 stash 后再执行 ship。
 3. **终极编译与测试阻断 (Compilation & Test Gate)**：
-   - 优先读取 `.paseo/story/coding_standards.md` 中记录的构建、Lint、类型检查和测试命令；若资产中没有定义，再使用项目惯例命令（例如 `npm run build`、`npm run lint && npm test`）。
+   - 优先读取 `.agents/story/coding_standards.md` 中记录的构建、Lint、类型检查和测试命令；若资产中没有定义，再使用项目惯例命令（例如 `npm run build`、`npm run lint && npm test`）。
    - 执行生产环境构建命令和项目全量单元测试与静态语法检查。
    - **一旦出现任何编译报错、Lint 告警或测试用例未通过，立即抛出醒目警告并强制中断发布，确保不带病上线。**
 4. **历史资产存在性核实**：
-   - `.paseo/story/` 及六个资产文件必须存在。若缺失，阻断发布并提示先运行 `/upaseo-init` 或让 `/using-upaseo` 完成模板自愈初始化。
+   - `.agents/story/` 及六个资产文件必须存在。若缺失，阻断发布并提示先运行 `/upaseo-init` 或让 `/using-upaseo` 完成模板自愈初始化。
+5. **项目待办读取**：
+   - 若 `.paseo/todos.md` 存在，必须读取其中的 Active todo，作为发布收尾状态更新的候选来源。
+   - 若文件不存在，不阻断发布；只在输出中说明当前项目尚未启用 `/upaseo-todo` 待办文件。
 
 ### Step 2: 历史开发资产固化与 CHANGELOG 追加 (Story Release & Changelog)
 由 `release-auditor` 角色主导：
 1. **资产版本号转换 (Story Solidification)**：
-   - 扫描项目 `.paseo/story/` 目录下的六个历史资产文件：`stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
+   - 扫描项目 `.agents/story/` 目录下的六个历史资产文件：`stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
    - 将这些文档中，所有在本次开发会话中由主 Agent 追加的以 `* [Updated in Iter N]` 为前缀的描述备注，增量更新替换为：
      - 若指定了 `--version <vX.Y.Z>`，替换为 `* [Released in vX.Y.Z]`
      - 若未指定版本号，替换为 `* [Shipped on YYYY-MM-DD]`（用当前本地日期替换）
@@ -62,8 +63,13 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
    - 读取本次主计划文件的 `Progress Notes` 章节，提炼出高密度的改动大纲。
    - 如果项目根目录下存在 `CHANGELOG.md`，自动将本次的改动大纲与版本号/日期作为最新一条记录追加到 `CHANGELOG.md` 的顶部。若文件不存在，则在根目录下新建 `CHANGELOG.md` 并写入。
 3. **Release metadata commit**：
-   - 若本步骤产生了 `.paseo/story/*` 或 `CHANGELOG.md` 修改，必须创建一个独立提交（例如 `chore: release metadata <version-or-date>`），让发布元数据可追溯。
+   - 若本步骤产生了 `.agents/story/*` 或 `CHANGELOG.md` 修改，必须创建一个独立提交（例如 `chore: release metadata <version-or-date>`），让发布元数据可追溯。
    - 若用户指定 `--dry-run`，只打印将会修改的文件和 commit message，不写文件、不提交。
+4. **项目 todo 完成状态更新**：
+   - 若 `.paseo/todos.md` 存在，必须根据本次主计划、CHANGELOG、release notes 和实际 diff 匹配与本次发布明确相关的 Active todo。
+   - 只关闭有证据证明已经交付的 todo；将其标记为 `[x]`，补充 `completed: YYYY-MM-DD` 与 `shipped: <version-or-date>`，并移动到 `## Done` 或保留在原条目但状态改为完成。
+   - 无法确认是否完成的 todo 必须保持 Active，并在 ship 输出中列为“仍未关闭”，不得为了清爽而误关。
+   - 若 todo 更新导致工作区产生变更，应纳入 Release metadata commit；`--dry-run` 时只展示将更新的 todo，不写文件。
 
 ### Step 3: 物理工作区与分支安全清理 (Physical Cleanup)
 由 `cleaner` 角色主导：
@@ -72,9 +78,14 @@ argument-hint: "[--version <vX.Y.Z>] [--keep-worktree] [--dry-run]"
    - 若 PR 尚未合并，停止并提醒用户先完成 PR 审批与合并。
 2. **Worktree 磁盘安全回收**：
    - 若本次开发启用了 `git worktree` 独立物理工作区，且用户**未指定** `--keep-worktree`：
-     - 安全地运行 `git worktree remove <worktree路径>` 彻底回收该 worktree 在磁盘上的物理文件夹，防止磁盘垃圾堆积。
+     - 只能清理能从本次主计划、handoff 文档、`git worktree list` 三者之一明确对应到本次已合并 PR 的 worktree。
+     - 清理前必须确认目标不是当前 cwd，不包含未提交修改，并且对应分支已经合并到主干。
+     - 任一条件无法确认时，跳过清理并在报告中列为“需人工确认”，不得猜测路径。
+     - 条件全部满足后，运行 `git worktree remove <worktree路径>` 回收该 worktree。
 3. **本地开发分支安全清理**：
-   - 安全删除本地已完成合并的临时 feature 开发分支（运行 `git branch -d <branch_name>`），保持本地 `git branch` 树的绝对清爽与极简。
+   - 只能删除能明确对应本次已合并 PR 的本地临时 feature 分支。
+   - 删除前必须通过 `git branch --merged <main-or-master>` 或等价证据确认该分支已合并；若证据不足，保留分支并报告。
+   - 条件全部满足后，运行 `git branch -d <branch_name>`；不得使用强制删除。
 
 ### Step 4: 避障教训的全局共享与归档 (Learnings Sync)
 由 `cleaner` 角色主导：

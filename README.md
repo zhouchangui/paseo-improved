@@ -12,13 +12,14 @@
 | `upaseo-brainstorm` | 脑暴收敛：极简方案设计 | 由 using-upaseo 自动调用 |
 | `upaseo-simplify` | PR 前代码极致精简 | 由 using-upaseo 自动调用 |
 | `upaseo-reviewer` | PR 前质量自审 | 由 using-upaseo 自动调用 |
-| `upaseo-init` | 项目初始化：自动构建 `.paseo/` 结构并逆向扫描提炼六大资产 | `/upaseo-init` |
+| `upaseo-init` | 项目初始化：自动构建 `.paseo/` 运行态目录、`.agents/story/` 资产库和 `AGENTS.md` 引用，并逆向扫描提炼六大资产 | `/upaseo-init` |
 | `upaseo-goal` | Goal 合成器：把粗略描述整理成可执行、可验收的 goal，确认后启动 `/goal` | `/upaseo-goal <rough request>` |
 | `upaseo-ship` | PR 合并后的发布收尾：主干校验、资产固化、CHANGELOG、release metadata commit 与工作区清理 | `/upaseo-ship` |
 | `upaseo-advisor` | 单 Agent 二次意见 | `/upaseo-advisor <question>` |
 | `upaseo-committee` | 双 Agent 根因分析 | `/upaseo-committee <problem>` |
 | `upaseo-handoff` | 任务完整移交 | `/upaseo-handoff <task>` |
 | `upaseo-compact` | 上下文压缩与恢复提示词 | `/upaseo-compact <optional focus>` |
+| `upaseo-todo` | 项目待办记录与状态更新 | 用户提到 todo / 待办 / backlog 时自动使用，或 `/upaseo-todo <todo>` |
 
 ## 安装
 
@@ -27,12 +28,12 @@
 cd /Users/zcg/workroot/paseo-improved
 
 # 1. 软链接到本地 Agent 运行环境
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify upaseo-todo using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.agents/skills/$skill
 done
 
 # 2. 软链接到 Antigravity 全局配置环境，以便在 / 中进行调用
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify upaseo-todo using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.gemini/config/skills/$skill
 done
 ```
@@ -57,6 +58,9 @@ done
 
 # 压缩当前上下文并生成恢复提示词
 /upaseo-compact 当前技能开发现场
+
+# 记录项目待办
+/upaseo-todo ship 时自动关闭本次发布已完成的 todo
 ```
 
 ## 目录结构
@@ -64,13 +68,8 @@ done
 ```
 paseo-improved/
 ├── .gitignore
-├── .paseo/                         # 运行时数据（learnings 不入库）
-│   ├── learnings.jsonl             # 避障学习记录
-│   ├── compacts/                   # 上下文压缩与恢复文档
-│   ├── plans/                      # 计划文件 (Source of Truth)
-│   │   ├── <slug>.md
-│   │   └── <slug>/
-│   │       └── iter_N_design_tasks.md
+├── AGENTS.md                       # 编程 Agent 根指引，引用 .agents/story 资产
+├── .agents/
 │   └── story/                      # 用户故事、数据模型、API、模块、架构约束、编码规范资产
 │       ├── stories.md
 │       ├── data_models.md
@@ -78,6 +77,14 @@ paseo-improved/
 │       ├── modules.md
 │       ├── architecture_constraints.md
 │       └── coding_standards.md
+├── .paseo/                         # 运行时数据（learnings 不入库）
+│   ├── learnings.jsonl             # 避障学习记录
+│   ├── compacts/                   # 上下文压缩与恢复文档
+│   ├── todos.md                    # 项目待办 Source of Truth
+│   ├── plans/                      # 计划文件 (Source of Truth)
+│   │   ├── <slug>.md
+│   │   └── <slug>/
+│   │       └── iter_N_design_tasks.md
 ├── requirement.md                  # 需求文档
 ├── .codex/
 │   ├── hooks.json                  # 项目级 Codex hooks（PreCompact / PostCompact）
@@ -98,6 +105,7 @@ paseo-improved/
 ├── upaseo-reviewer/
 ├── upaseo-ship/                    # 自动化发布与清理技能
 ├── upaseo-simplify/
+├── upaseo-todo/                    # 项目待办记录与状态更新技能
 ├── using-upaseo/                    # 核心编排入口
 │   ├── SKILL.md
 │   └── references/
@@ -108,6 +116,9 @@ paseo-improved/
 ## 核心机制
 
 - **避障学习**：`.paseo/learnings.jsonl` — 所有技能启动时读取，容量上限 30 条
+- **项目待办**：`.paseo/todos.md` — 用户提到 todo/待办/backlog 时由 `/upaseo-todo` 记录，`/upaseo-ship` 只关闭有发布证据的完成项
+- **资产根指引**：`AGENTS.md` — 项目根入口，引用 `.agents/story/` 六大资产，方便任意编程 Agent 接入上下文
+- **历史资产库**：`.agents/story/` — 用户故事、数据模型、API、模块拓扑、架构约束和编码规范的长期 Source of Truth
 - **上下文压缩**：`/upaseo-compact` 会先检查并自愈当前仓库的 compact hooks，再创建 `.paseo/compacts/` 恢复文档并输出恢复提示词，替代系统 compact 的低保真摘要
 - **安全自动 compact**：仓库内 `.codex/hooks.json` 只在当前 repo 启用 `PreCompact` / `PostCompact`，自动保存现场并在 compact 后提示恢复，不修改全局 Codex 行为
 - **自主判定**：Agent 自动选择 micro/quick/full 模式和 auto-advance/gate 网关

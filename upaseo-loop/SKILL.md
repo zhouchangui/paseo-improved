@@ -4,7 +4,6 @@ description: >-
   Run an agent loop until an exit condition is met. Use when the user says
   "loop", "babysit", "keep trying until", "check every X", "watch", or wants
   iterative autonomous execution.
-user-invocable: true
 ---
 
 # Upaseo Loop Skill

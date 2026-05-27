@@ -4,9 +4,7 @@ description: >-
   核心开发工作流编排技能。运行重度开发任务的生命周期管理，内置自主复杂度判定、
   微改快速通道、增量式迭代推进、独立迭代设计文档、自主推进/用户验证网关、
   风险分级 upaseo-loop、UI 强制 Gemini、优先日志验证、PR 提交前强制自审简化、
-  会话复盘与避障学习落盘。
-user-invocable: true
-argument-hint: "[--quick|--full] [--autopilot|--gate] [--worktree] [--pr-per-iteration] <task>"
+  会话复盘与避障学习落盘。Use for /using-upaseo development tasks, including optional quick/full, autopilot/gate, worktree, and PR-per-iteration modes.
 ---
 
 # Using Upaseo (核心开发工作流技能)
@@ -34,7 +32,7 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
   │
   ├── [micro 微改] ──> Micro-Change Decision → 直接手术刀式修改 → 最小确定性验证 → 简短交付
   │
-  ├── [quick 模式] ──> 最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 验证 → 提交
+  ├── [quick 模式] ──> 最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 验证 → Gate/Auto → 提交
   │
   └── [full 模式]
         │
@@ -74,9 +72,11 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 
 1. 读取 `~/.paseo/orchestration-preferences.json` 以获取底层 Agent 的 Provider 分发。
 2. **UI 设计 Gemini 专属约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider **强制限定为 `gemini` 系列模型**。无 Gemini 可用时，暂停并通知用户，不得降级。
-3. **自动初始化 `.paseo/` 目录与历史资产库自愈**：
-   - 运行 `mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.paseo/story` 确保目录结构存在。
-   - 历史资产库自愈：检查 `.paseo/story/` 目录下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。若有任何文件缺失，自动将 `using-upaseo/references/` 下对应的模板文件（例如 `stories_template.md` 等）拷贝/写入生成至该目录下，确保架构基础资产库健全。如果当前项目是遗留或老项目，**推荐手动触发运行 `/upaseo-init` 技能**来进行代码的深度扫描和资产的逆向初始化整理。
+3. **自动初始化 `.paseo/` 运行态目录、`.agents/story/` 历史资产库与 `AGENTS.md` 引用自愈**：
+   - 运行 `mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.agents/story` 确保目录结构存在。
+   - 若 `<项目根目录>/.paseo/todos.md` 缺失，创建最小 todo 模板；后续用户提到 todo/待办/backlog 时交由 `/upaseo-todo` 写入，不只保留在对话里。
+   - 历史资产库自愈：检查 `.agents/story/` 目录下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。若有任何文件缺失，自动将 `using-upaseo/references/` 下对应的模板文件（例如 `stories_template.md` 等）拷贝/写入生成至该目录下，确保架构基础资产库健全。如果当前项目是遗留或老项目，**推荐手动触发运行 `/upaseo-init` 技能**来进行代码的深度扫描和资产的逆向初始化整理。
+   - `AGENTS.md` 引用自愈：若项目根目录缺失 `AGENTS.md`，创建一个简洁根指引；若已存在但没有 `.agents/story/` 引用，幂等追加一个 `upaseo` 资产引用段落。该段落必须说明 `.paseo/` 只保存运行态上下文，`.agents/story/` 保存长期项目资产，并列出六个资产文件。
 4. **Paseo 命令行自动检测与初始化安装**：
    - 检查当前系统 `PATH` 中是否能成功执行 `paseo`（通过 `which paseo` 或运行 `paseo --version`）。
    - 若未在 `PATH` 中找到：
@@ -127,7 +127,7 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 |:---|:---|:---|
 | 微改快速通道 | Agent 风险判定 / 非 `--full` / 用户未要求 TDD | Micro-Change Decision → 直接手术刀式修改 → 最小确定性验证 → 简短交付 |
 | 完整仪式 | 自动判定 / `--full` 强制 | 脑暴 → 迭代拆分 → 每迭代计划评审会 → Loop 实现 → Gate/Auto → 自审 → PR |
-| 快速模式 | 自动判定 / `--quick` 强制 | 跳过脑暴，最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 日志验证 → 用户确认 → 提交 |
+| 快速模式 | 自动判定 / `--quick` 强制 | 跳过脑暴，最小主计划 → 单迭代计划评审会 → 轻量 Loop 实现 → 日志验证 → Gate/Auto 判定 → 提交 |
 
 **Agent 选择模式后，必须在执行前向用户简要说明判定理由（一句话），用户可随时纠正。无法确定风险等级时，必须保守升级，不得走微改快速通道。**
 
@@ -204,16 +204,16 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 ## 必读文件（启动后第一步必须 view_file 读取以下文件）
 - 迭代设计与任务文档：<iter_N_design_tasks.md 绝对路径>
-- 架构约束资产：<项目根目录>/.paseo/story/architecture_constraints.md
-- 编码规范资产：<项目根目录>/.paseo/story/coding_standards.md
+- 架构约束资产：<项目根目录>/.agents/story/architecture_constraints.md
+- 编码规范资产：<项目根目录>/.agents/story/coding_standards.md
 - 主计划文件（按需）：<主计划文件绝对路径>
 - 避障学习记录（按需）：<项目根目录>/.paseo/learnings.jsonl
 
 ## 关联历史开发资产（根据改动范围追加读取并绝对遵守）
-- 用户故事资产：<项目根目录>/.paseo/story/stories.md
-- 数据模型资产：<项目根目录>/.paseo/story/data_models.md
-- 核心接口资产：<项目根目录>/.paseo/story/apis.md
-- 包与模块资产：<项目根目录>/.paseo/story/modules.md
+- 用户故事资产：<项目根目录>/.agents/story/stories.md
+- 数据模型资产：<项目根目录>/.agents/story/data_models.md
+- 核心接口资产：<项目根目录>/.agents/story/apis.md
+- 包与模块资产：<项目根目录>/.agents/story/modules.md
 
 硬性读取顺序：先读取迭代设计文档，再读取 `architecture_constraints.md` 和 `coding_standards.md`，然后按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。严禁跳过这些启动读取动作。严禁违反已有的核心历史开发资产、架构约束和编码规范进行重复造轮子、破坏性重构或风格漂移。
 
@@ -229,7 +229,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 2. **立即持久化记录状态（文件即上下文）**：主 Agent 不依赖自身 memory，必须**立即、实时地将当前执行状态与中间证据持久化写入主计划文件 `.paseo/plans/<slug>.md`**。在 `Progress Notes` 段落中追加“实现完成，等待验证”的精确说明。同时在主计划或迭代设计文档中显式声明当前的业务 `State`（例如 `State: Verifying`），便于断电恢复。此时不得把路线图勾选为 `[x]`。
 3. **受阻状态同步**：若子 Agent 报告 blocked 或实现结果不可验证，必须在 `.paseo/plans/<slug>.md` 中将当前迭代标记为 `[!]` 并将 `State` 更新为 `State: Blocked`，留在本迭代修复。
 4. **保存计划文件后，方可进入后续流程**。
-5. **记录待刷新资产范围**：主 Agent 分析本轮变更可能影响的资产文件（如 `stories.md` , `data_models.md` 等），但验证通过前，严禁将其写入 `.paseo/story/` 资产。
+5. **记录待刷新资产范围**：主 Agent 分析本轮变更可能影响的资产文件（如 `stories.md` , `data_models.md` 等），但验证通过前，严禁将其写入 `.agents/story/` 资产。
 
 > **严禁**：子 Agent 完工后直接跳到下一阶段而不记录主计划执行状态；验证通过前严禁提前将路线图标记为 `[x]`。
 
@@ -256,8 +256,9 @@ Orchestrator 在 `initialPrompt` 中必须：
 **自动推进时：**
 - 在主计划文件中记录 `[auto-advanced]` 标记及验证证据摘要。
 - **资产防事实漂移校验 (Diff-Asset Validation)**：在增量刷新资产前，主 Agent 必须对比 `git diff` 与 `iter_N_design_tasks.md`，进行严格的一致性审计。**确保只有确实在代码中被实现并验证通过的用例和结构变更，才允许增量更新写入核心历史资产**，严防空头承诺和设计漂移。
-- 校验通过后，执行增量历史资产刷新：若本轮新增或修改了前后台用户功能点用例、数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录、前端展示页面路由、架构约束或编码规范，必须由主 Agent 或 `story-updater` 更新 `.paseo/story/` 对应文件，并以 `* [Updated in Iter <N>]` 作为前缀。
+- 校验通过后，执行增量历史资产刷新：若本轮新增或修改了前后台用户功能点用例、数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录、前端展示页面路由、架构约束或编码规范，必须由主 Agent 或 `story-updater` 更新 `.agents/story/` 对应文件，并以 `* [Updated in Iter <N>]` 作为前缀。
 - 将当前迭代路线图状态更新为 `[x]`，更新计划文件中的 `State: Completed`（或在多迭代下标记 `State: Next_Iteration_Start`），并创建本迭代高追溯性命名（如 `checkpoint-iter-<N>`）的 checkpoint commit，记录 commit hash 后方可进入下一迭代。
+- checkpoint commit 只允许包含本迭代计划和本迭代实际修改的文件。提交前必须复查 `git status --short`，发现无关改动时保留不动并在计划中说明；不得为了整洁提交而回退、stash 或 stage 用户/他人已有改动。
 - 用户可随时要求回溯查看。
 
 **等待用户时，向用户展示：**
@@ -292,7 +293,8 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 3. **创建 PR 并交付 (PR Fallback 智能兜底)**：
    - 在 worktree 中进行整洁提交（Git commit），然后尝试运行 `gh pr create` 提交 PR，将 PR 链接和自审报告呈给用户。
-   - **PR 智能兜底 (PR Fallback)**：如果本地环境未安装 `gh` CLI 命令行、网络阻断或未授权登录导致 PR 创建失败，系统**必须智能且温和地降级为本地提交模式**。自动在当前临时分支或主干创建一个语义整洁的 Commit 后，清晰打印引导：“*本地 gh CLI 未授权或缺失，已为您在本地完成整洁 Commit，请您手动执行 git push / 提交 PR。*”
+   - 提交前必须只 stage 本任务相关文件；若工作区包含无关改动，保持原样并在交付报告中列出“未纳入提交的无关改动”。
+   - **PR 智能兜底 (PR Fallback)**：如果本地环境未安装 `gh` CLI 命令行、网络阻断或未授权登录导致 PR 创建失败，系统**必须智能且温和地降级为本地提交模式**。在已确认 staged 内容仅包含本任务相关文件后，创建一个语义整洁的 Commit，并清晰打印引导：“*本地 gh CLI 未授权或缺失，已为您在本地完成整洁 Commit，请您手动执行 git push / 提交 PR。*”若无法隔离 unrelated changes，停止并请用户确认，不得把无关改动混入提交。
    - **最终 PR 阶段必须等待用户审批**，不可自动合并。
    - `using-upaseo` 到 PR 创建与用户审批为止；用户确认并合并 PR 后，必须手动运行 `/upaseo-ship` 完成发布校验、资产固化、CHANGELOG 和 worktree/分支清理。
 

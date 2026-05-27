@@ -62,13 +62,13 @@ Step 0.2: 判定为快速模式 → 告知用户（一句话理由）
 日志验证 (Log-Based Verification)
   │
   ▼
-等待用户确认（快速模式不支持 auto-advance）
+按 Gate/Auto 规则判定：客观 agent-run/logs 可自动推进；manual/browser/UI 必须等待用户确认
   │
   ▼
 upaseo-simplify + upaseo-reviewer
   │
   ▼
-checkpoint commit → 会话复盘 → PR/提交交付
+checkpoint commit（仅包含本迭代相关文件） → 会话复盘 → PR/提交交付
 ```
 
 ## 与完整模式的差异
@@ -80,7 +80,7 @@ checkpoint commit → 会话复盘 → PR/提交交付
 | 迭代数 | **固定 1 个** | 多个 |
 | 路线图文件 | 创建最小 `.paseo/plans/<slug>.md` | 创建完整 `.paseo/plans/<slug>.md` |
 | TDD / Loop | 有行为风险时仍使用轻量 `upaseo-loop`；确定性微改走微改快速通道 | 必须使用 `upaseo-loop` |
-| 自主推进 | 不支持（必须用户确认） | 支持 auto-advance |
+| 自主推进 | 支持同一 Gate/Auto 判定；manual/browser/UI 必须等待用户 | 支持 auto-advance |
 | 自审 + 精简 | **同样执行** | 同样执行 |
 | 会话复盘 | **同样执行** | 同样执行 |
 

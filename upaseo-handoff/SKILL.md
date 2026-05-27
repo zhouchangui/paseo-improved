@@ -1,7 +1,6 @@
 ---
 name: upaseo-handoff
 description: Hand off the current task to another agent with full context. Use when the user says "handoff", "hand off", "hand this to", or wants to pass work to another agent.
-user-invocable: true
 ---
 
 # Handoff Skill
@@ -31,7 +30,10 @@ Read the **upaseo** skill — provider for the receiving agent comes from orches
 ## Parsing arguments
 
 1. **Provider** — explicit user request first; otherwise resolve from `impl` preference (or `ui` if the task is styling-only). **Remember, UI tasks must use Gemini.**
-2. **Worktree** — "in a worktree" / "worktree" → create a worktree via Paseo with a short branch name derived from the task, based on the current branch.
+2. **Worktree** — "in a worktree" / "worktree" → use or create a worktree via Paseo.
+   - If the caller already supplied a concrete worktree path, or the current cwd is already the target worktree, **do not create another worktree**. Use that path as the receiving agent cwd.
+   - Only create a new worktree when the user requested worktree isolation and no existing worktree path/cwd was provided.
+   - When creating a new worktree, use a short branch name derived from the task, based on the current branch.
 3. **Task description** — anything else the user said.
 
 ## The handoff prompt
@@ -47,11 +49,11 @@ The receiving agent has zero context. Include:
 
 ## 上下文文件（首步必须读取）
 - Handoff 移交文档：`<项目根目录>/.paseo/handoffs/<handoff>.md` — 接收后第一步使用 view_file 读取
-- 迭代设计文档：`<绝对路径>` — 接收后第一步使用 view_file 读取
+- 迭代设计文档：`<绝对路径>` — 若存在，接收后第一步使用 view_file 读取
 - 主计划文件：`<绝对路径>` — 按需读取
 - 避障学习记录：`<项目根目录>/.paseo/learnings.jsonl` — 按需读取
 
-严禁跳过 Handoff 移交文档和迭代设计文档的读取。严禁基于口头转述猜测行事。
+严禁跳过 Handoff 移交文档。若 handoff prompt 提供了迭代设计文档，严禁跳过该文档读取；若本次 handoff 没有迭代设计文档，必须在报告中明确“无迭代设计文档，按 handoff 文档执行”。严禁基于口头转述猜测行事。
 
 ## 避障规则（来自历史教训，必须严格遵守）
 - <规则1>
@@ -81,7 +83,7 @@ The receiving agent has zero context. Include:
 
 ## Launch
 
-Create the agent via Paseo with a `[Handoff] <task>` title, the briefing as initial prompt, and cwd set to the worktree path if `--worktree`.
+Create the agent via Paseo with a `[Handoff] <task>` title, the briefing as initial prompt, and cwd set to the worktree path if `--worktree`. Pass `background: true` and `notifyOnFinish: true` so the receiving agent reports back asynchronously.
 
 Don't wait by default — the user decides whether to follow along or move on. Tell them the agent ID and how to follow along (the upaseo skill explains).
 

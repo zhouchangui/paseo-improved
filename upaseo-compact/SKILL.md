@@ -3,8 +3,6 @@ name: upaseo-compact
 description: >-
   压缩当前会话上下文并生成可恢复现场的 compact 文档和恢复提示词。用于替代系统 compact
   指令，适合用户说“压缩上下文”“compact”“保存现场”“重建会话后恢复”“生成恢复提示词”等场景。
-user-invocable: true
-argument-hint: "[optional focus or resume target]"
 ---
 
 # Upaseo Compact Skill
@@ -54,7 +52,7 @@ argument-hint: "[optional focus or resume target]"
 - 已完成的关键改动和涉及文件
 - 未完成事项、下一步最短路径、已知风险和阻塞
 - 已运行的验证命令、结果、失败原因或未验证原因
-- 当前 `.paseo/plans/`、`.paseo/handoffs/`、`.paseo/story/` 中与任务直接相关的文件
+- 当前 `.paseo/plans/`、`.paseo/handoffs/`、`.agents/story/` 中与任务直接相关的文件
 - 用户明确要求保留的风格、流程、偏好或禁止事项
 
 不要臆造验证结果。缺少证据时写“未验证”或“未知”，并说明恢复后第一条验证命令。

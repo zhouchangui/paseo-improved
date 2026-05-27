@@ -11,7 +11,7 @@ FAIL=0
 pass() { echo "  ✅ $1"; PASS=$((PASS+1)); }
 fail() { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 
-SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init)
+SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init upaseo-todo)
 ALL_SKILLS=("${SKILLS[@]}" using-upaseo)
 
 echo "=== 1. YAML name 字段校验 ==="
@@ -19,6 +19,16 @@ for s in "${ALL_SKILLS[@]}"; do
   expected="$s"
   actual=$(grep "^name:" "$ROOT/$s/SKILL.md" 2>/dev/null | head -1 | sed 's/name: //')
   if [ "$actual" = "$expected" ]; then pass "$s"; else fail "$s: expected '$expected', got '$actual'"; fi
+done
+
+echo ""
+echo "=== 1.1 skill-creator 元数据与长度规范 ==="
+for s in "${ALL_SKILLS[@]}"; do
+  fm=$(awk 'BEGIN{c=0} /^---$/ {c++; next} c==1 {print}' "$ROOT/$s/SKILL.md" 2>/dev/null)
+  extra=$(printf "%s\n" "$fm" | awk -F: '/^[A-Za-z0-9_-]+:/ { if ($1 != "name" && $1 != "description") print $1 }')
+  if [ -z "$extra" ]; then pass "$s frontmatter 仅包含 name/description"; else fail "$s frontmatter 含非 skill-creator 字段: $extra"; fi
+  body_lines=$(awk 'BEGIN{c=0;n=0} /^---$/ {c++; next} c>=2 {n++} END{print n}' "$ROOT/$s/SKILL.md" 2>/dev/null)
+  if [ "$body_lines" -le 500 ]; then pass "$s body <= 500 lines"; else fail "$s body 超过 500 lines: $body_lines"; fi
 done
 
 echo ""
@@ -76,7 +86,10 @@ echo "=== 7. 开发故事与历史资产目录机制校验 ==="
 for t in stories data_models apis modules architecture_constraints coding_standards; do
   if [ -f "$ROOT/using-upaseo/references/${t}_template.md" ] || [ -f "$ROOT/upaseo-init/references/templates/${t}.md" ]; then pass "模板 $t 存在"; else fail "缺失模板 ${t}_template.md"; fi
 done
-if grep -q "mkdir -p.*\/story\|mkdir -p.*\.paseo\/story" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story 目录初始化"; else fail "SKILL.md 缺失 story 目录创建"; fi
+if grep -q "mkdir -p.*\.agents/story" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 .agents/story 目录初始化"; else fail "SKILL.md 缺失 .agents/story 目录创建"; fi
+if grep -q "AGENTS.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null && grep -q "AGENTS.md" "$ROOT/upaseo-init/SKILL.md" 2>/dev/null; then pass "using-upaseo 与 upaseo-init 包含 AGENTS.md 引用自愈"; else fail "缺失 AGENTS.md 创建或引用自愈规程"; fi
+if grep -q "\.agents/story" "$ROOT/AGENTS.md" 2>/dev/null; then pass "根 AGENTS.md 引用 .agents/story 资产库"; else fail "根 AGENTS.md 缺失 .agents/story 引用"; fi
+if grep -q "stories.md" "$ROOT/AGENTS.md" 2>/dev/null && grep -q "data_models.md" "$ROOT/AGENTS.md" 2>/dev/null && grep -q "apis.md" "$ROOT/AGENTS.md" 2>/dev/null && grep -q "modules.md" "$ROOT/AGENTS.md" 2>/dev/null && grep -q "architecture_constraints.md" "$ROOT/AGENTS.md" 2>/dev/null && grep -q "coding_standards.md" "$ROOT/AGENTS.md" 2>/dev/null; then pass "根 AGENTS.md 列出六大资产文件"; else fail "根 AGENTS.md 未列全六大资产文件"; fi
 if grep -q "story-updater" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 story-updater 自动更新资产机制"; else fail "SKILL.md 缺失 story-updater 机制"; fi
 if grep -q "stories.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 stories 资产历史强注入"; else fail "SKILL.md 缺失 stories 资产强注入"; fi
 if grep -q "data_models.md" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含 data_models 资产历史强注入"; else fail "SKILL.md 缺失 data_models 资产强注入"; fi
@@ -87,8 +100,10 @@ if grep -q "早期 tool call.*architecture_constraints.md.*coding_standards.md" 
 if grep -q "迭代计划评审会" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null && grep -q "Design Council Log" "$ROOT/using-upaseo/SKILL.md" 2>/dev/null; then pass "SKILL.md 包含迭代计划评审会与会议记录门槛"; else fail "SKILL.md 缺失迭代计划评审会或会议记录门槛"; fi
 echo "--- 7.1 运行时 story 资产文件存在性 ---"
 for t in stories data_models apis modules architecture_constraints coding_standards; do
-  if [ -f "$ROOT/.paseo/story/${t}.md" ]; then pass ".paseo/story/${t}.md 存在"; else fail "缺失 .paseo/story/${t}.md"; fi
+  if [ -f "$ROOT/.agents/story/${t}.md" ]; then pass ".agents/story/${t}.md 存在"; else fail "缺失 .agents/story/${t}.md"; fi
 done
+old_story_refs=$(grep -rn "\.paseo/story" "$ROOT" --exclude-dir=.git --exclude="validate.sh" 2>/dev/null || true)
+if [ -z "$old_story_refs" ]; then pass "无 .paseo/story 旧路径引用"; else fail "发现 .paseo/story 旧路径引用: $old_story_refs"; fi
 
 echo ""
 echo "=== 7.2 quick/full 与 checkpoint 规程一致性 ==="
@@ -119,6 +134,7 @@ grep -q "global-learnings.jsonl" "$ship_skill" 2>/dev/null && pass "SKILL.md 包
 grep -q "PR 已经合并" "$ship_skill" 2>/dev/null && pass "SKILL.md 明确 ship 在 PR 合并后执行" || fail "SKILL.md 未明确 ship 在 PR 合并后执行"
 grep -q "Release metadata commit" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含 release metadata commit" || fail "SKILL.md 缺失 release metadata commit"
 grep -q "不负责发起 feature 分支合并" "$ship_skill" 2>/dev/null && pass "SKILL.md 不在 ship 阶段发起 feature merge" || fail "SKILL.md 仍可能在 ship 阶段合并 feature 分支"
+grep -q "\.paseo/todos.md" "$ship_skill" 2>/dev/null && grep -q "只关闭有证据" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含项目 todo 发布关闭规程" || fail "SKILL.md 缺失项目 todo 发布关闭规程"
 
 echo ""
 echo "=== 9. upaseo-compact 核心压缩规程校验 ==="
@@ -140,9 +156,21 @@ init_skill="$ROOT/upaseo-init/SKILL.md"
 grep -q "story-architect" "$init_roles" 2>/dev/null && pass "角色 story-architect 存在" || fail "角色 story-architect 缺失"
 grep -q "asset-reverse-engineer" "$init_roles" 2>/dev/null && pass "角色 asset-reverse-engineer 存在" || fail "角色 asset-reverse-engineer 缺失"
 grep -q "目录" "$init_skill" 2>/dev/null && pass "SKILL.md 包含目录自愈初始化步骤" || fail "SKILL.md 缺失目录自愈初始化"
+grep -q "AGENTS.md" "$init_skill" 2>/dev/null && grep -q "AGENTS.md" "$init_roles" 2>/dev/null && pass "upaseo-init 创建或修复 AGENTS.md 根指引" || fail "upaseo-init 缺失 AGENTS.md 根指引规程"
 grep -q "扫描\|逆向" "$init_skill" 2>/dev/null && pass "SKILL.md 包含 codebase 逆向扫描步骤" || fail "SKILL.md 缺失 codebase 逆向扫描"
 grep -q "stories.md.*data_models.md.*apis.md.*modules.md.*architecture_constraints.md.*coding_standards.md" "$init_skill" 2>/dev/null && pass "SKILL.md 包含六大资产写入规程" || fail "SKILL.md 缺失六大资产写入规程"
 if grep -q "\.paseo/learnings/" "$init_skill" "$init_roles" 2>/dev/null; then fail "upaseo-init 仍引用错误的 .paseo/learnings/ 目录"; else pass "upaseo-init 使用 .paseo/learnings.jsonl 文件约定"; fi
+
+echo ""
+echo "=== 11. upaseo-todo 核心待办规程校验 ==="
+todo_skill="$ROOT/upaseo-todo/SKILL.md"
+grep -q "\.paseo/todos.md" "$todo_skill" 2>/dev/null && pass "upaseo-todo 写入 .paseo/todos.md" || fail "upaseo-todo 缺失 todos 文件路径"
+grep -q "Source of Truth" "$todo_skill" 2>/dev/null && pass "upaseo-todo 声明 todos 文件为事实源" || fail "upaseo-todo 未声明 Source of Truth"
+grep -q "用户明确提到.*todo" "$todo_skill" 2>/dev/null && grep -q "待办" "$todo_skill" 2>/dev/null && pass "upaseo-todo 明确 todo/待办触发记录" || fail "upaseo-todo 缺失触发记录规则"
+grep -q "## Active" "$ROOT/.paseo/todos.md" 2>/dev/null && grep -q "## Done" "$ROOT/.paseo/todos.md" 2>/dev/null && pass ".paseo/todos.md 模板存在" || fail ".paseo/todos.md 缺失基础模板"
+grep -q "Ship Integration" "$todo_skill" 2>/dev/null && grep -q "只关闭有证据" "$todo_skill" 2>/dev/null && pass "upaseo-todo 包含 ship 完成状态更新规则" || fail "upaseo-todo 缺失 ship 状态更新规则"
+grep -q "upaseo-todo" "$ROOT/README.md" 2>/dev/null && grep -q "\.paseo/todos.md" "$ROOT/README.md" 2>/dev/null && pass "README 注册 upaseo-todo 与 todos 文件" || fail "README 缺失 upaseo-todo 注册"
+grep -q "\.paseo/todos.md" "$ROOT/AGENTS.md" 2>/dev/null && pass "AGENTS.md 记录 todo 工作流约定" || fail "AGENTS.md 缺失 todo 工作流约定"
 
 echo ""
 echo "========================================"

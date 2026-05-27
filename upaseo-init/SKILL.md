@@ -1,19 +1,18 @@
 ---
 name: upaseo-init
 description: >-
-  项目初始化与历史开发故事逆向整理技能。自动创建 .paseo 目录树，逆向分析已有 codebase，
+  项目初始化与历史开发故事逆向整理技能。自动创建 .paseo 运行态目录、.agents/story 资产库和根 AGENTS.md，
+  逆向分析已有 codebase，
   提炼并生成包含用户故事(stories)、数据模型(data_models)、公共API(apis)、模块页面路由(modules)、
   架构约束(architecture_constraints)及编码规范(coding_standards)在内的六大历史核心开发资产，
-  从而为后续 Agent 迭代式开发提供高一致性上下文。
-user-invocable: true
-argument-hint: "[--force] [--path <dir>]"
+  从而为后续 Agent 迭代式开发提供高一致性上下文。Use when initializing or force-refreshing upaseo assets for a target project path.
 ---
 
 # Upaseo Init (项目初始化与历史资产逆向整理技能)
 
 本技能为 `upaseo` 套件的初始构建器和遗留 codebase 逆向整理器。当您想在任何现有（或全新）的项目中接入 `upaseo` 规范化迭代开发流程时，**由您手动输入 `/upaseo-init` 触发本技能**。
 
-它能帮助您自动一键建立 `.paseo/` 目录结构，并通过只读分析当前项目 codebase，逆向提炼并生成包含 **`stories.md` (用户故事资产)**、**`architecture_constraints.md` (架构约束资产)** 和 **`coding_standards.md` (编码规范资产)** 在内的六大核心历史开发资产。这极大地降低了老项目接入 `upaseo` 开发故事闭环机制的录入成本，为后续 Agent 的无偏迭代奠定完美的架构源头 (Source of Truth)。
+它能帮助您自动一键建立 `.paseo/` 运行态目录、`.agents/story/` 长期资产库，并创建或修复项目根目录 `AGENTS.md` 中对资产库的引用说明。随后通过只读分析当前项目 codebase，逆向提炼并生成包含 **`stories.md` (用户故事资产)**、**`architecture_constraints.md` (架构约束资产)** 和 **`coding_standards.md` (编码规范资产)** 在内的六大核心历史开发资产。这极大地降低了老项目接入 `upaseo` 开发故事闭环机制的录入成本，为后续 Agent 的无偏迭代奠定完美的架构源头 (Source of Truth)。
 
 ---
 
@@ -21,7 +20,7 @@ argument-hint: "[--force] [--path <dir>]"
 1. 角色职责规范定义在 `references/roles.md`。
 2. 运行此命令时，默认会对当前工作目录进行处理，您也可以通过参数进行精细控制：
    - `--path <dir>`：指定待初始化的项目绝对路径，默认采用当前执行目录。
-   - `--force`：若 `.paseo/` 目录已存在，强制覆盖已有的资产文件。如果不加该参数，系统会进行幂等创建，不会覆盖已有资产。
+   - `--force`：允许重建已生成的 upaseo 资产文件，但只限 `.agents/story/*`、`.paseo/todos.md` 模板和 `AGENTS.md` 中的 upaseo 管理段落。不得覆盖业务源码、用户自写规则或未纳入 upaseo 管理的文件。执行前必须列出将覆盖的目标；无法确认归属时跳过并报告。
 
 ---
 
@@ -30,12 +29,19 @@ argument-hint: "[--force] [--path <dir>]"
 ### Step 1: 幂等目录初始化与模板自愈 (Directory & Template Healing)
 由 `story-architect` 角色主导：
 1. **目录树构建**：
-   - 在目标项目根目录下创建 `.paseo/` 文件夹。
-   - 在其下创建子目录：`.paseo/story/`（资产库）和 `.paseo/plans/`（迭代计划），并在需要记录避障经验时使用项目级文件 `.paseo/learnings.jsonl`。
+   - 在目标项目根目录下创建 `.paseo/` 文件夹作为运行态目录。
+   - 创建 `.paseo/plans/`（迭代计划）和 `.agents/story/`（长期项目资产库），并在需要记录避障经验时使用项目级文件 `.paseo/learnings.jsonl`。
+   - 若 `.paseo/todos.md` 不存在，创建项目待办模板，作为 `/upaseo-todo` 的 Source of Truth。
    - 使用 `mkdir -p` 确保整个创建过程的幂等性与零报错。
 2. **默认模板自愈**：
-   - 检查 `.paseo/story/` 下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
+   - 检查 `.agents/story/` 下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
    - 对任何缺失的资产文件，自动从本技能的 `references/templates/` 目录中将对应的默认初始模板复制或写入到该项目下，确保资产基座完整。
+   - 若文件已存在且未传 `--force`，不得覆盖；若传了 `--force`，也必须先确认目标属于 upaseo 管理资产，并在输出报告中列出覆盖清单。
+3. **AGENTS.md 创建与引用修复**：
+   - 检查目标项目根目录是否存在 `AGENTS.md`。
+   - 若不存在，创建一个项目级 `AGENTS.md`，内容必须说明：`.paseo/` 只保存 plans、handoffs、compacts、todos、learnings 等运行态上下文；`.agents/story/` 保存长期项目资产。
+   - `AGENTS.md` 必须列出六大资产文件及其用途：`stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
+   - 若 `AGENTS.md` 已存在，不得覆盖用户原有规则；必须幂等追加或更新一个清晰的 `upaseo` 资产引用段落，确保其他编程 Agent 能从根指引发现 `.agents/story/`。
 
 ### Step 2: 已有 Codebase 只读扫描与技术栈识别 (Codebase Scanning)
 由 `asset-reverse-engineer` 角色主导：
@@ -47,10 +53,10 @@ argument-hint: "[--force] [--path <dir>]"
    - 扫描项目主要源文件目录（如 `src/`、`app/`、`lib/`、`routes/`、`models/`、`controllers/`）。
    - 收集所有的文件名、目录层次以及用于定义接口和数据结构的代码块。
    - 识别架构入口、层级边界、依赖方向、运行时边界、插件/适配器边界、外部服务集成点和禁止跨层访问的惯例。
-   - **安全红线**：本步骤仅通过只读工具（如 `list_dir`、`grep_search`、`view_file`）检索结构与细节，**绝不修改项目任何现有代码**。
+   - **安全红线**：本步骤仅通过只读工具（如 `list_dir`、`grep_search`、`view_file` 或当前宿主的等价只读工具）检索结构与细节，**绝不修改项目任何现有代码**。
 
 ### Step 3: 六大核心历史开发资产逆向整理 (Asset Engineering)
-由 `asset-reverse-engineer` 角色主导。将 Step 2 扫描出来的系统结构增量写入 `.paseo/story/` 下的六大资产文档中。为了明确标示出系统原有的成熟历史资产，**所有逆向整理出来的描述条目必须统一以 `* [Legacy Asset]` 或 `* [Released in v0.0.0]` 前缀开头。**
+由 `asset-reverse-engineer` 角色主导。将 Step 2 扫描出来的系统结构增量写入 `.agents/story/` 下的六大资产文档中。为了明确标示出系统原有的成熟历史资产，**所有逆向整理出来的描述条目必须统一以 `* [Legacy Asset]` 或 `* [Released in v0.0.0]` 前缀开头。**
 
 具体逆向提炼规则为：
 1. **Modules 资产逆向 (modules.md)**：
@@ -80,5 +86,5 @@ argument-hint: "[--force] [--path <dir>]"
    - 在控制台中向用户打印一份内容详实、结构精美的 **`upaseo 项目资产初始化大纲报告`**。
    - 报告需包含：扫描到的文件及目录总数、识别的技术栈、逆向提炼出的用户故事数、公共 API 路由数、数据表数、模块节点数、架构约束数以及编码规范数。
 2. **Source of Truth 确立**：
-   - 告知用户六大资产文件的绝对路径，并提示用户这些文件已成为该项目最真实的资产蓝图（Source of Truth）。
+   - 告知用户 `AGENTS.md` 和六大资产文件的绝对路径，并提示用户这些文件已成为该项目最真实的资产蓝图（Source of Truth）。
    - 宣告项目已完美接入 `upaseo` 高一致性闭环开发工作流，接下来便可愉快地使用 `/using-upaseo` 开始正式的需求迭代！

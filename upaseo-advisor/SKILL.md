@@ -1,8 +1,6 @@
 ---
 name: upaseo-advisor
-description: Spin up a single agent as an advisor — second opinion on the current task. Use when the user says "advisor", "second opinion", "what does X think", or wants an outside take without delegating the work itself.
-user-invocable: true
-argument-hint: "[--provider <name>] <question or topic>"
+description: Spin up a single agent as an advisor for a second opinion without delegating the work. Use when the user says "advisor", "second opinion", "what does X think", wants an outside take, or provides an optional provider and a question/topic.
 ---
 
 # Upaseo Advisor
@@ -55,7 +53,11 @@ This is analysis only. Do NOT edit, create, or delete any files. Do NOT write co
 
 ## Launch and synthesize
 
-Create the advisor agent via Paseo with a `[Advisor] <topic>` title and the briefing as the initial prompt. Wait for it to finish. Read its response. Synthesize for the user — the advisor's verdict + your recommendation.
+Create the advisor agent via Paseo with a `[Advisor] <topic>` title and the briefing as the initial prompt.
+
+默认按 `upaseo` 的异步规则启动：`background: true`、`notifyOnFinish: true`。不要轮询或忙等；收到完成通知后再读取回复并综合给用户。只有用户明确要求“同步等结果”且当前工具支持阻塞执行时，才可以前台等待。
+
+Synthesize for the user — the advisor's verdict + your recommendation.
 
 **完工汇报**：向 Orchestrator 报告 advisor 结论，包含 status（success/blocked）和一句话 summary。
 

@@ -4,8 +4,6 @@ description: >-
   将用户的自然语言描述整理成 Agent 可理解、可执行、可验收的 goal；先生成
   goal 草案并等待用户确认，确认后调用 /goal 开始执行。适用于用户说“帮我写
   goal”“把这个需求变成 goal”“整理成可执行目标”“确认后启动 goal”等场景。
-user-invocable: true
-argument-hint: "<rough user request>"
 ---
 
 # Upaseo Goal Skill
