@@ -11,7 +11,7 @@ FAIL=0
 pass() { echo "  ✅ $1"; PASS=$((PASS+1)); }
 fail() { echo "  ❌ $1"; FAIL=$((FAIL+1)); }
 
-SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init upaseo-todo)
+SKILLS=(upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-e2e upaseo-goal upaseo-handoff upaseo-loop upaseo-reviewer upaseo-simplify upaseo-ship upaseo-init upaseo-todo)
 ALL_SKILLS=("${SKILLS[@]}" using-upaseo)
 
 echo "=== 1. YAML name 字段校验 ==="
@@ -52,13 +52,25 @@ done
 
 echo ""
 echo "=== 4. 外部技能引用残留检测 ==="
-found=$(grep -rn "brainstorming\|code-simplify\|code-reviewer\|karpathy-guidelines" "$ROOT"/*/SKILL.md "$ROOT"/using-upaseo/references/roles.md 2>/dev/null || true)
-if [ -z "$found" ]; then pass "无外部技能引用残留"; else fail "发现外部引用: $found"; fi
+found=$(grep -rn "brainstorming\|code-simplify\|code-reviewer" "$ROOT"/*/SKILL.md "$ROOT"/using-upaseo/references/roles.md 2>/dev/null || true)
+if [ -z "$found" ]; then pass "无遗留外部技能引用残留"; else fail "发现遗留外部引用: $found"; fi
+if grep -q "karpathy-guidelines" "$ROOT/upaseo-goal/SKILL.md" 2>/dev/null; then pass "upaseo-goal 允许显式应用 karpathy-guidelines"; else pass "未使用 karpathy-guidelines"; fi
 
 echo ""
 echo "=== 5. 计划文件路径一致性 ==="
 bad_paths=$(grep -n '~/\.paseo/plans\|~/.paseo/plans' "$ROOT/using-upaseo/SKILL.md" 2>/dev/null || true)
 if [ -z "$bad_paths" ]; then pass "路径统一为 .paseo/plans/ (项目根目录)"; else fail "发现 ~/.paseo/plans 引用: $bad_paths"; fi
+
+echo ""
+echo "=== 5.2 goal 与 plan 目录契约 ==="
+grep -q "\.paseo/goals/" "$ROOT/upaseo-goal/SKILL.md" && pass "upaseo-goal 写入 .paseo/goals/" || fail "upaseo-goal 未声明 .paseo/goals/"
+grep -q "不调用 \`/goal\`\|不启动执行" "$ROOT/upaseo-goal/SKILL.md" && pass "upaseo-goal 只落盘不执行" || fail "upaseo-goal 仍可能启动执行"
+grep -q "upaseo-goal.*可选流程\|可选 goal" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 将 upaseo-goal 视为可选流程" || fail "using-upaseo 未声明 goal 流程可选"
+grep -q "\.paseo/goals/" "$ROOT/using-upaseo/SKILL.md" && grep -q "\.paseo/plans/" "$ROOT/using-upaseo/SKILL.md" && pass "using-upaseo 区分 goal 与 plan 目录" || fail "using-upaseo 缺失 goal/plan 目录分离"
+grep -q "\.paseo/goals/" "$ROOT/README.md" && grep -q "\.paseo/goals/" "$ROOT/AGENTS.md" && pass "README 与 AGENTS.md 记录 goals 目录契约" || fail "README 或 AGENTS.md 缺失 goals 目录契约"
+if [ -d "$ROOT/.paseo/goals" ]; then pass ".paseo/goals 目录存在"; else fail ".paseo/goals 目录不存在"; fi
+grep -q "upaseo-brainstorm" "$ROOT/upaseo-goal/SKILL.md" && grep -q "karpathy-guidelines" "$ROOT/upaseo-goal/SKILL.md" && grep -q "upaseo-simplify" "$ROOT/upaseo-goal/SKILL.md" && pass "upaseo-goal 集成 brainstorm/simplify/karpathy 原则" || fail "upaseo-goal 缺失目标收敛原则集成"
+grep -q "^边界：" "$ROOT/upaseo-goal/SKILL.md" && grep -q "logs|tests|browser|manual|agent-run" "$ROOT/upaseo-goal/SKILL.md" && pass "upaseo-goal 模板包含边界与验证方法" || fail "upaseo-goal 模板缺失边界或验证方法"
 
 echo ""
 echo "=== 5.1 upaseo 与 using-upaseo 职责边界 ==="
@@ -171,6 +183,21 @@ grep -q "## Active" "$ROOT/.paseo/todos.md" 2>/dev/null && grep -q "## Done" "$R
 grep -q "Ship Integration" "$todo_skill" 2>/dev/null && grep -q "只关闭有证据" "$todo_skill" 2>/dev/null && pass "upaseo-todo 包含 ship 完成状态更新规则" || fail "upaseo-todo 缺失 ship 状态更新规则"
 grep -q "upaseo-todo" "$ROOT/README.md" 2>/dev/null && grep -q "\.paseo/todos.md" "$ROOT/README.md" 2>/dev/null && pass "README 注册 upaseo-todo 与 todos 文件" || fail "README 缺失 upaseo-todo 注册"
 grep -q "\.paseo/todos.md" "$ROOT/AGENTS.md" 2>/dev/null && pass "AGENTS.md 记录 todo 工作流约定" || fail "AGENTS.md 缺失 todo 工作流约定"
+
+echo ""
+echo "=== 12. upaseo-e2e 集成测试规程校验 ==="
+e2e_skill="$ROOT/upaseo-e2e/SKILL.md"
+grep -q "冻结测试环境" "$e2e_skill" 2>/dev/null && grep -q "先写测试用例" "$e2e_skill" 2>/dev/null && pass "upaseo-e2e 先冻结环境再写 case" || fail "upaseo-e2e 缺失环境冻结或 case-first 规则"
+grep -q "人工确认" "$e2e_skill" 2>/dev/null && grep -q "用户明确回复" "$e2e_skill" 2>/dev/null && pass "upaseo-e2e 在执行前要求人工确认" || fail "upaseo-e2e 缺失人工确认门槛"
+grep -q "CLI 验证必须树形全部覆盖" "$e2e_skill" 2>/dev/null && grep -q "CLI Coverage Summary" "$e2e_skill" 2>/dev/null && pass "upaseo-e2e 包含 CLI 树形全部覆盖要求" || fail "upaseo-e2e 缺失 CLI 树形覆盖规程"
+grep -q "失败先复现" "$e2e_skill" 2>/dev/null && grep -q "gh issue create" "$e2e_skill" 2>/dev/null && grep -q "\.github/issues/" "$e2e_skill" 2>/dev/null && pass "upaseo-e2e 包含复现优先与 issue 双通道上报" || fail "upaseo-e2e 缺失复现或 issue 上报规程"
+[ -x "$ROOT/upaseo-e2e/scripts/report_issue.sh" ] && pass "upaseo-e2e issue 上报脚本存在且可执行" || fail "upaseo-e2e issue 上报脚本缺失或不可执行"
+[ -d "$ROOT/.github/issues" ] && pass ".github/issues 降级 issue 目录存在" || fail ".github/issues 降级 issue 目录不存在"
+grep -q "upaseo-e2e" "$ROOT/README.md" 2>/dev/null && grep -q "\.github/issues" "$ROOT/README.md" 2>/dev/null && pass "README 注册 upaseo-e2e 与 issue 降级目录" || fail "README 缺失 upaseo-e2e 注册"
+grep -q "upaseo-e2e" "$ROOT/AGENTS.md" 2>/dev/null && pass "AGENTS.md 记录 upaseo-e2e 工作流" || fail "AGENTS.md 缺失 upaseo-e2e 工作流约定"
+grep -q "upaseo-e2e" "$ROOT/.agents/story/modules.md" 2>/dev/null && pass "模块资产记录 upaseo-e2e 模块职责" || fail "模块资产缺失 upaseo-e2e"
+grep -q "\.github/issues/" "$ROOT/.agents/story/architecture_constraints.md" 2>/dev/null && pass "架构资产记录 issue 本地降级边界" || fail "架构资产缺失 issue 降级边界"
+grep -q "人工确认" "$ROOT/.agents/story/coding_standards.md" 2>/dev/null && grep -q "树形全部覆盖" "$ROOT/.agents/story/coding_standards.md" 2>/dev/null && grep -q "gh issue create" "$ROOT/.agents/story/coding_standards.md" 2>/dev/null && pass "编码规范记录 e2e 确认、覆盖与上报规程" || fail "编码规范缺失 e2e 规程"
 
 echo ""
 echo "========================================"

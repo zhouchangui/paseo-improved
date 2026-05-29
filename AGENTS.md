@@ -5,7 +5,7 @@
 ## Project Rules
 
 - Daily development starts from `/using-upaseo <task>`. The low-level `upaseo` skill is reference material, not the full workflow entrypoint.
-- Project runtime state lives under `.paseo/`: plans, handoffs, compacts, `todos.md`, and `learnings.jsonl`.
+- Project runtime state lives under `.paseo/`: goals, plans, handoffs, compacts, `todos.md`, and `learnings.jsonl`.
 - Long-lived project assets live under `.agents/story/`, so any coding agent can discover them from this file before making changes.
 - Before architecture, module, API, data model, user-facing behavior, or coding-standard changes, read the relevant `.agents/story/` asset first.
 - Keep all conclusions evidence-backed with command output, tests, logs, or explicit unverified labels.
@@ -21,7 +21,9 @@
 
 ## Workflow Rules
 
-- Use `.paseo/plans/<slug>.md` and `.paseo/plans/<slug>/iter_N_design_tasks.md` as the Source of Truth for active work.
+- Optional goal artifacts live under `.paseo/goals/<slug>.md`; active execution plans live under `.paseo/plans/<slug>.md` and `.paseo/plans/<slug>/iter_N_design_tasks.md`.
+- `upaseo-goal` is optional. When a goal file exists, `using-upaseo` should read the goal first and then produce a separate plan file; when no goal file exists, `using-upaseo` may plan directly from the user request.
+- For integration / e2e validation tasks, use `/upaseo-e2e`: freeze the test environment first, write the full case matrix before execution, require one manual confirmation before running any case, require CLI tree coverage when applicable, reproduce failures before filing issues, and fall back to `.github/issues/` when `gh` is unavailable.
 - If the user mentions todo, TODO, 待办, backlog, 记一下, or 后续要做, update `.paseo/todos.md` through `/upaseo-todo` instead of leaving it only in chat.
 - Update `.agents/story/` only after implementation has been verified and the diff proves the asset change is real.
 - If `.agents/story/` or this `AGENTS.md` file is missing in a target project, run `/upaseo-init` before normal iteration.

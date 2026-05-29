@@ -13,7 +13,8 @@
 | `upaseo-simplify` | PR 前代码极致精简 | 由 using-upaseo 自动调用 |
 | `upaseo-reviewer` | PR 前质量自审 | 由 using-upaseo 自动调用 |
 | `upaseo-init` | 项目初始化：自动构建 `.paseo/` 运行态目录、`.agents/story/` 资产库和 `AGENTS.md` 引用，并逆向扫描提炼六大资产 | `/upaseo-init` |
-| `upaseo-goal` | Goal 合成器：把粗略描述整理成可执行、可验收的 goal，确认后启动 `/goal` | `/upaseo-goal <rough request>` |
+| `upaseo-goal` | Goal 合成器：结合项目上下文和用户确认，把粗略描述整理成简洁、边界清楚、可验证的 goal，并落盘到 `.paseo/goals/` | `/upaseo-goal <rough request>` |
+| `upaseo-e2e` | 集成测试与 e2e 验证：先冻结环境和写用例，人工确认一次后再逐条执行，失败先复现并用 `gh` / `.github/issues` 上报 | `/upaseo-e2e <target or flow>` |
 | `upaseo-ship` | PR 合并后的发布收尾：主干校验、资产固化、CHANGELOG、release metadata commit 与工作区清理 | `/upaseo-ship` |
 | `upaseo-advisor` | 单 Agent 二次意见 | `/upaseo-advisor <question>` |
 | `upaseo-committee` | 双 Agent 根因分析 | `/upaseo-committee <problem>` |
@@ -28,12 +29,12 @@
 cd /Users/zcg/workroot/paseo-improved
 
 # 1. 软链接到本地 Agent 运行环境
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify upaseo-todo using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-e2e upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify upaseo-todo using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.agents/skills/$skill
 done
 
 # 2. 软链接到 Antigravity 全局配置环境，以便在 / 中进行调用
-for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify upaseo-todo using-upaseo; do
+for skill in upaseo upaseo-advisor upaseo-brainstorm upaseo-committee upaseo-compact upaseo-e2e upaseo-goal upaseo-handoff upaseo-init upaseo-loop upaseo-reviewer upaseo-ship upaseo-simplify upaseo-todo using-upaseo; do
   ln -sf "$(pwd)/$skill" ~/.gemini/config/skills/$skill
 done
 ```
@@ -53,8 +54,14 @@ done
 # 手动触发 Ship 自动化发布
 /upaseo-ship
 
-# 把粗略描述整理为 goal，确认后启动执行
+# 把粗略描述整理为 goal，并单独落盘
 /upaseo-goal 想修一下登录页移动端体验
+
+# 先冻结环境、写完整测试矩阵，再逐条执行 e2e
+/upaseo-e2e 验证 CLI 登录、授权、发布主链路
+
+# 直接从任务启动，或读取已有 goal 再产出 plan
+/using-upaseo .paseo/goals/login-mobile.md
 
 # 压缩当前上下文并生成恢复提示词
 /upaseo-compact 当前技能开发现场
@@ -67,6 +74,8 @@ done
 
 ```
 paseo-improved/
+├── .github/
+│   └── issues/                     # e2e 失败时的本地 issue 降级记录
 ├── .gitignore
 ├── AGENTS.md                       # 编程 Agent 根指引，引用 .agents/story 资产
 ├── .agents/
@@ -81,7 +90,9 @@ paseo-improved/
 │   ├── learnings.jsonl             # 避障学习记录
 │   ├── compacts/                   # 上下文压缩与恢复文档
 │   ├── todos.md                    # 项目待办 Source of Truth
-│   ├── plans/                      # 计划文件 (Source of Truth)
+│   ├── goals/                      # 目标文件 (Source of Truth for goals)
+│   │   └── <slug>.md
+│   ├── plans/                      # 计划文件 (Source of Truth for plans)
 │   │   ├── <slug>.md
 │   │   └── <slug>/
 │   │       └── iter_N_design_tasks.md
@@ -98,7 +109,8 @@ paseo-improved/
 ├── upaseo-brainstorm/
 ├── upaseo-committee/
 ├── upaseo-compact/                 # 上下文压缩与恢复提示词技能
-├── upaseo-goal/                    # Goal 合成器：先确认，再启动 /goal
+├── upaseo-e2e/                     # 集成测试/e2e：环境冻结、case-first、逐条执行、issue 上报
+├── upaseo-goal/                    # Goal 合成器：先确认，再落盘到 .paseo/goals/
 ├── upaseo-handoff/
 ├── upaseo-init/                    # 项目初始化与逆向整理技能
 ├── upaseo-loop/
@@ -116,7 +128,9 @@ paseo-improved/
 ## 核心机制
 
 - **避障学习**：`.paseo/learnings.jsonl` — 所有技能启动时读取，容量上限 30 条
+- **目标与计划分离**：`.paseo/goals/` 只存目标文档；goal 应简洁、边界清楚、定义好验证方法。`.paseo/plans/` 只存执行计划；`upaseo-goal` 是可选前置，`using-upaseo` 读取 goal 后再单独产出 plan
 - **项目待办**：`.paseo/todos.md` — 用户提到 todo/待办/backlog 时由 `/upaseo-todo` 记录，`/upaseo-ship` 只关闭有发布证据的完成项
+- **集成测试闭环**：`/upaseo-e2e` 先冻结测试环境并写测试矩阵，先经过一次人工确认，再逐条执行用例；若发现缺陷，必须先复现，再优先通过 `gh issue create` 上报，失败时降级写入 `.github/issues/`
 - **资产根指引**：`AGENTS.md` — 项目根入口，引用 `.agents/story/` 六大资产，方便任意编程 Agent 接入上下文
 - **历史资产库**：`.agents/story/` — 用户故事、数据模型、API、模块拓扑、架构约束和编码规范的长期 Source of Truth
 - **上下文压缩**：`/upaseo-compact` 会先检查并自愈当前仓库的 compact hooks，再创建 `.paseo/compacts/` 恢复文档并输出恢复提示词，替代系统 compact 的低保真摘要

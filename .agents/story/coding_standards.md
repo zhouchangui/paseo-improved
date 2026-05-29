@@ -25,6 +25,9 @@
 ## 4. 测试与验证约定
 
 * [Legacy Asset] 修改技能工作流后必须运行 `bash scripts/validate.sh`，并复查 `git diff` 中的流程一致性。
+* [Legacy Asset] 集成测试 / e2e 必须先冻结测试环境，再写完整测试矩阵，并在执行前完成一次人工确认，之后才允许逐条执行用例。
+* [Legacy Asset] 若被测对象支持 CLI，验证方法必须做树形全部覆盖：每个命令节点都要进入测试矩阵并拥有执行、smoke 或 skip 理由。
+* [Legacy Asset] 集成测试发现失败时，必须先在冻结环境中复现并分类为 `reproduced`、`flaky` 或 `env-gap`，随后再通过 `gh issue create` 或 `.github/issues/` 记录缺陷。
 
 ---
 
