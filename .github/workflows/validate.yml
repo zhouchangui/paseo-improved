@@ -1,0 +1,29 @@
+name: validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run upaseo skill suite validation
+        # L1 结构层中的符号链接检查依赖本地 ~/.agents/skills 与 ~/.gemini/config/skills
+        # 部署，在 CI 中不存在。validate.sh 对缺失软链接只报 fail 但不中断（set -euo
+        # pipefail 不作用于单条 grep 检查），CI 关心的是文件存在性与行为层规程一致性。
+        # 这里允许非零退出码并打印完整输出，便于在 PR 中定位回归。
+        run: |
+          bash scripts/validate.sh || true
+          # 再次运行只提取失败行；若存在 ❌ 且非符号链接类，则真正失败。
+          bash scripts/validate.sh 2>&1 | grep "❌" | grep -v "符号链接\|链接无效或不存在" > /tmp/hard_fails || true
+          if [ -s /tmp/hard_fails ]; then
+            echo "::error::validate.sh 存在硬失败（非符号链接类）"
+            cat /tmp/hard_fails
+            exit 1
+          fi
+          echo "validate.sh: 无硬失败（符号链接类失败在 CI 中预期忽略）"

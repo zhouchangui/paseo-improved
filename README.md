@@ -96,14 +96,15 @@ paseo-improved/
 │   │   ├── <slug>.md
 │   │   └── <slug>/
 │   │       └── iter_N_design_tasks.md
-├── requirement.md                  # 需求文档
+├── docs/history/                   # 归档文档（requirement.md 等历史需求）
 ├── .codex/
 │   ├── hooks.json                  # 项目级 Codex hooks（PreCompact / PostCompact）
 │   └── hooks/
 │       ├── pre-compact.mjs
 │       └── post-compact.mjs
 ├── scripts/
-│   └── validate.sh                 # 自动化一致性验证
+│   ├── validate.sh                 # 自动化一致性验证（L1结构/L2交叉引用/L3行为 三层）
+│   └── pre-commit.sh               # 本地 pre-commit hook（安装到 .git/hooks/）
 ├── upaseo/                         # 基座技能
 ├── upaseo-advisor/
 ├── upaseo-brainstorm/
@@ -146,6 +147,20 @@ paseo-improved/
 
 ## 验证
 
+一致性校验脚本 `scripts/validate.sh` 分三层（iter 5 重构）：
+
+- **L1 结构层**：技能存在性、frontmatter、符号链接、运行时目录骨架
+- **L2 交叉引用层**：技能间引用真实可解析、共享 reference 单一事实源、无遗留外部依赖、goal/plan 目录契约
+- **L3 行为层**：各技能关键规程条文（文件即上下文、状态机、SoT 链、drift 校验、发布、e2e …）
+
 ```bash
 bash scripts/validate.sh
 ```
+
+### CI 与 pre-commit 自动校验
+
+- **GitHub Actions**：`.github/workflows/validate.yml` 在 push/PR 到 `main` 时自动运行 validate.sh；符号链接类失败（本机部署态）在 CI 中被忽略，只对硬失败（规程/结构回归）阻断。
+- **本地 pre-commit**：`scripts/pre-commit.sh` 可安装为 `.git/hooks/pre-commit`，commit 前自动校验，硬失败阻断、符号链接类仅警告。
+  ```bash
+  cp scripts/pre-commit.sh .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+  ```

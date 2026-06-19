@@ -27,6 +27,10 @@
 * [Legacy Asset] PR 合并后的发布收尾必须由 `/upaseo-ship` 触发，不由 `using-upaseo` 自动执行。
 * [Legacy Asset] 集成测试 / e2e 验证由 `/upaseo-e2e <target>` 独立执行；若发现缺陷，先通过 `gh` 或 `.github/issues/` 记录，再回流 `/using-upaseo` 做修复。
 * [Legacy Asset] `/upaseo-init` 的 AGENTS.md 生成规则来自技能包内置 reference；运行时不得依赖外部 `create-agentsmd` 技能是否存在。
+* [Updated in Iter 1] 共享 reference 单一事实源：`upaseo/references/learnings-precheck.md`（避障前置读取五步）、`upaseo/references/roles.md`（16 角色总表）、`upaseo/references/diff-asset-validation.md`（资产防漂移校验六步清单）。各技能 SKILL.md 不再内联重复，只写一行引用。
+* [Updated in Iter 2] 多宿主兼容：`upaseo/SKILL.md` 维护宿主工具原语映射表；`using-upaseo`、`upaseo-loop`、`upaseo-handoff`、`upaseo-compact` 的子 Agent prompt / verifier / 恢复读取都引用该表，不硬编码单一宿主原语名。
+* [Updated in Iter 4] SoT 优先级链 compact > handoff > plan > goal 作为恢复读取顺序的权威定义；compact/handoff/plan/goal 文档模板各自声明 `Priority:` 元数据。
+* [Updated in Iter 5] 一致性校验脚本 `scripts/validate.sh` 三层结构（L1 结构 / L2 交叉引用 / L3 行为）；CI workflow `.github/workflows/validate.yml` 与本地 `scripts/pre-commit.sh` 自动执行。
 
 ---
 

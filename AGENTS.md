@@ -23,11 +23,14 @@
 ## Workflow Rules
 
 - Optional goal artifacts live under `.paseo/goals/<slug>.md`; active execution plans live under `.paseo/plans/<slug>.md` and `.paseo/plans/<slug>/iter_N_design_tasks.md`.
+- Plan files declare `schema_version` (current `1`) to fix iteration-design filename convention; recovery follows the migration rules in `using-upaseo/SKILL.md`.
+- Durable documents (goal/plan/handoff/compact) follow the Source-of-Truth priority chain `compact > handoff > plan > goal` (defined in `upaseo/SKILL.md`); goal boundary and acceptance constraints are immutable to higher-priority docs.
 - `upaseo-goal` is optional. When a goal file exists, `using-upaseo` should read the goal first and then produce a separate plan file; when no goal file exists, `using-upaseo` may plan directly from the user request.
 - For integration / e2e validation tasks, use `/upaseo-e2e`: freeze the test environment first, write the full case matrix before execution, require one manual confirmation before running any case, require CLI tree coverage when applicable, reproduce failures before filing issues, and fall back to `.github/issues/` when `gh` is unavailable.
 - If the user mentions todo, TODO, 待办, backlog, 记一下, or 后续要做, update `.paseo/todos.md` through `/upaseo-todo` instead of leaving it only in chat.
-- Update `.agents/story/` only after implementation has been verified and the diff proves the asset change is real.
+- Update `.agents/story/` only after implementation has been verified and the diff proves the asset change is real (follow `upaseo/references/diff-asset-validation.md`).
 - If `.agents/story/` or this `AGENTS.md` file is missing in a target project, run `/upaseo-init` before normal iteration.
+- Skill suite consistency is enforced by `scripts/validate.sh` (L1 structure / L2 cross-reference / L3 behavior), auto-run via `.github/workflows/validate.yml` and optional local `scripts/pre-commit.sh`.
 
 ## Documentation Lookup
 
