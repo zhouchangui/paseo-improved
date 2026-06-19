@@ -71,7 +71,7 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 ### 0. 偏好设置检查与目录初始化 (Pre-start)
 
 1. 读取 `~/.paseo/orchestration-preferences.json` 以获取底层 Agent 的 Provider 分发。
-2. **UI 设计 Provider 约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider 从 `~/.paseo/orchestration-preferences.json` 的 `ui` 分类解析。若该分类未配置，默认使用 `gemini` 系列模型并告知用户可在 preferences 中覆盖；若用户 preferences 显式指定非 Gemini provider，以用户为准。
+2. **UI 设计 Provider 约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider 从 `~/.paseo/orchestration-preferences.json` 的 `ui` 分类解析。本项目 `ui` 已 pin 到 `codex/gpt-5.5`，以用户 preferences 为准；若某项目 `ui` 分类未配置，默认回退 `codex/gpt-5.5` 并告知用户可在 preferences 中覆盖。
 3. **自动初始化 `.paseo/` 运行态目录、`.agents/story/` 历史资产库与 `AGENTS.md` 引用自愈**：
    - 运行 `mkdir -p <项目根目录>/.paseo/goals`、`mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.agents/story` 确保目录结构存在。
    - 若 `<项目根目录>/.paseo/todos.md` 缺失，创建最小 todo 模板；后续用户提到 todo/待办/backlog 时交由 `/upaseo-todo` 写入，不只保留在对话里。
@@ -230,7 +230,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 - **精简阶梯前置门 (Simplification Ladder Gate)**：启动 loop 写代码之前，对照 `upaseo/references/simplify-ladder.md` 做 6 级阶梯自检（按项目类型条件启用：diff 含代码扩展名走完整 6 级；纯文档/配置降级为一句话 YAGNI 自检），把"本可停在更高 rung 却写多了"的实现挡在写代码之前。阶梯判定结论一句话写入迭代设计草案（如"用了 stdlib 的 X，跳过 5/6"）。微改快速通道跳过本前置门。
 - 除微改快速通道外，启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码；快速模式也必须使用轻量 loop（建议 `max-iterations <= 3`），不得由 Agent 直接绕过 loop 自行修改。
-- 如果这是 UI 或 Styling 改动，**`upaseo-loop` 的 worker provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；未配置时默认 Gemini 系列，用户 preferences 显式指定非 Gemini 时以用户为准**（详见 `upaseo/SKILL.md`）。
+- 如果这是 UI 或 Styling 改动，**`upaseo-loop` 的 worker provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；本项目 `ui` 已 pin 到 `codex/gpt-5.5`，以用户 preferences 为准（未配置时回退 `codex/gpt-5.5`）**（详见 `upaseo/SKILL.md`）。
 - TDD 模式只用于有行为风险、验收不确定或需要锁定回归的改动：先写失败测试/日志埋点，再让它跑通。微改快速通道不得为了“走流程”新增低价值测试。
 
 #### D. 子 Agent 完工通知与主计划状态同步（文件即上下文，实时记录）

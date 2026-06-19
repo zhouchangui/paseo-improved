@@ -34,7 +34,7 @@ Loops are a CLI primitive: `paseo loop run`. Manage with `paseo loop ls`, `paseo
    - Verifier prompt (`--verify`) for judgment ("Return done=true only if all tests pass and the changed files are coherent. Cite the command and the outcome.").
    - Both, when shell rules out the obvious failures and the verifier judges the rest.
    - **合规检查注入**：verifier prompt 中必须增加一条检查——"确认 worker 的早期动作中读取了迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 这三个路径（按路径被读取判定，不按工具名判定），若任一缺失则判定为不合规（done=false）"。
-5. **Providers** — `--provider` for the worker, `--verify-provider` for the verifier. From preferences unless the user named them. For implementation loops, pair worker and verifier on different providers — each catches the other's blind spots. **UI 或 styling 相关任务的 worker provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；未配置时默认 Gemini 系列（详见 `upaseo/SKILL.md`）。**
+5. **Providers** — `--provider` for the worker, `--verify-provider` for the verifier. From preferences unless the user named them. For implementation loops, pair worker and verifier on different providers — each catches the other's blind spots. **UI 或 styling 相关任务的 worker provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；本项目 `ui` 已 pin 到 `codex/gpt-5.5`（未配置时回退 `codex/gpt-5.5`，详见 `upaseo/SKILL.md`）。**
 6. **Sleep** — `--sleep` only when polling something external. Otherwise let it run as fast as the loop completes.
 7. **Stops** — set a sensible `--max-iterations` and/or `--max-time`. Open-ended loops are how runaways happen.
 8. **Archive** — `--archive` keeps agents after each iteration for inspection.

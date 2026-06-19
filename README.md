@@ -143,7 +143,7 @@ paseo-improved/
 - **Worktree 会话隔离**：`/using-upaseo --worktree` 创建隔离 worktree 后，必须通过 `/upaseo-handoff --worktree` 在新 worktree cwd 下重建接收会话；计划、实现、验证、提交都以新 worktree 为准
 - **发布分层**：`/using-upaseo` 负责创建 PR；PR 合并后由 `/upaseo-ship` 做发布校验和收尾
 - **日志优先验证**：验证以运行时日志为第一证据
-- **UI 走 preferences**：UI/Styling 任务的 provider 从 `orchestration-preferences.json` 的 `ui` 分类解析，未配置时默认 Gemini 系列，可在 preferences 中覆盖
+- **UI 走 preferences**：UI/Styling 任务的 provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；本项目 `ui` 已 pin 到 `codex/gpt-5.5`（未配置时回退 `codex/gpt-5.5`），可在 preferences 中覆盖
 
 ## 验证
 

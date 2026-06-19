@@ -87,7 +87,7 @@ Compose: call `create_worktree` first, then `create_agent` with `cwd` set to the
 
 ## Models
 
-`claude/sonnet` (default), `claude/opus` (harder reasoning), `codex/gpt-5.4` (frontier coding), `gemini/gemini-2.5-pro` (UI & structural design), `claude/haiku` (tests only).
+`claude/sonnet` (default), `claude/opus` (harder reasoning), `codex/gpt-5.5` (frontier coding, default for this project via preferences), `gemini/gemini-2.5-pro` (UI & structural design), `claude/haiku` (tests only).
 
 ## Orchestration preferences
 
@@ -103,19 +103,19 @@ Categories: `impl`, `ui`, `research`, `planning`, `audit`. Skills pick the categ
 ```json
 {
   "providers": {
-    "impl": "codex/gpt-5.4",
-    "ui": "gemini/gemini-2.5-pro",
-    "research": "codex/gpt-5.4",
-    "planning": "codex/gpt-5.4",
-    "audit": "codex/gpt-5.4"
+    "impl": "codex/gpt-5.5",
+    "ui": "codex/gpt-5.5",
+    "research": "codex/gpt-5.5",
+    "planning": "codex/gpt-5.5",
+    "audit": "codex/gpt-5.5"
   },
   "preferences": [
-    "Gemini 2.5 Pro is the absolute standard choice for UI-related, creative visual styling, HTML, CSS, layouts and UX styling assets. Codex or Claude Sonnet is the workhorse for core implementation."
+    "For this project all role categories default to codex/gpt-5.5; override a category only when a task clearly benefits from a different provider's strengths."
   ]
 }
 ```
 
-If the file is missing, use sensible defaults and tell the user once.
+If the file is missing, use sensible defaults and tell the user once. For this project the user has pinned all categories (impl/ui/research/planning/audit/test/acceptance) to `codex/gpt-5.5` — skills must respect that pinning and not silently fall back to Gemini for UI/styling.
 
 ## Waiting
 

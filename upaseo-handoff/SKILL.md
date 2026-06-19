@@ -30,7 +30,7 @@ Read the **upaseo** skill — provider for the receiving agent comes from orches
 
 ## Parsing arguments
 
-1. **Provider** — explicit user request first; otherwise resolve from `impl` preference (or `ui` if the task is styling-only). UI/styling 任务的 provider 从 `orchestration-preferences.json` 的 `ui` 分类解析，未配置时默认 Gemini 系列（详见 `upaseo/SKILL.md`）。
+1. **Provider** — explicit user request first; otherwise resolve from `impl` preference (or `ui` if the task is styling-only). UI/styling 任务的 provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；本项目 `ui` 已 pin 到 `codex/gpt-5.5`（未配置时回退 `codex/gpt-5.5`，详见 `upaseo/SKILL.md`）。
 2. **Worktree** — "in a worktree" / "worktree" → use or create a worktree via Paseo.
    - If the caller already supplied a concrete worktree path, or the current cwd is already the target worktree, **do not create another worktree**. Use that path as the receiving agent cwd.
    - Only create a new worktree when the user requested worktree isolation and no existing worktree path/cwd was provided.
