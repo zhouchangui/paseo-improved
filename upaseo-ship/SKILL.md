@@ -25,9 +25,8 @@ description: >-
 ## 2. 前置避障读取 (Learnings Precheck) ⚠️ 硬性规定
 
 **本步骤为第零优先级动作，在执行任何发布动作之前必须无条件执行。**
-1. 检查当前项目根目录下是否存在 `.paseo/learnings.jsonl` 文件。
-2. 若文件存在，使用 `view_file` 完整读取并解析其中的历史避障记录。
-3. 严格遵循其中的规则，如果在后续的编译、合并或清理过程中有对应的避障规约，必须予以绝对遵守（例如：若有 `docker compose 必须指定 -p dingding` 且发布涉及容器重启，必须自动附加）。
+
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `command_error`。严格遵循其中的规则，如果在后续的编译、合并或清理过程中有对应的避障规约，必须予以绝对遵守（例如：若有 `docker compose 必须指定 -p dingding` 且发布涉及容器重启，必须自动附加）。
 
 ---
 

@@ -24,7 +24,7 @@ description: >-
 
 ## Step 0: 避障读取
 
-如果当前项目根目录存在 `.paseo/learnings.jsonl`，先读取与范围控制、重复记录、发布收尾、工作区安全相关的避障规则。若不存在则跳过。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `command_error|tool_misuse`。提炼与范围控制、重复记录、发布收尾、工作区安全相关的避障规则。
 
 ## Step 1: 自愈 todo 文件
 

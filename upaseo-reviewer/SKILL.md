@@ -30,7 +30,7 @@ description: 本地代码自审与质量监督技能。在提交 PR 前对当前
 
 ## 前置避障读取
 
-在执行审查规程前，检查当前项目根目录下是否存在 `.paseo/learnings.jsonl`。若存在，使用 `view_file` 读取并提炼避障规则，将规则作为审查清单的补充——若 diff 中的改动可能触犯某条历史教训，必须在审计报告中**专项标注**。若文件不存在则跳过。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `command_error|tool_misuse`。提炼的规则作为审查清单的补充——若 diff 中的改动可能触犯某条历史教训，必须在审计报告中**专项标注**。
 
 ---
 

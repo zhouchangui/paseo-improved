@@ -41,7 +41,7 @@ description: >-
 
 ## Step 0: 避障读取
 
-如果当前项目根目录存在 `.paseo/learnings.jsonl`，先读取并提炼其中与当前任务、命令、验证、工作区隔离、工具误用相关的避障规则。若文件不存在则跳过。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `command_error|tool_misuse`。提炼与当前任务、命令、验证、工作区隔离、工具误用相关的避障规则。
 
 ## Step 1: 现场取证
 

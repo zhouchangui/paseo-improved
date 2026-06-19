@@ -29,7 +29,7 @@ description: 本地极致代码精简技能。融合了极简主义核心主张 
 
 ## 前置避障读取
 
-在执行精简规程前，检查当前项目根目录下是否存在 `.paseo/learnings.jsonl`。若存在，使用 `view_file` 读取并提炼避障规则。在精简审查过程中，若某段代码的存在正是为了遵守某条避障规则，则**禁止将其视为冗余代码删除**。若文件不存在则跳过。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `command_error|tool_misuse`。在精简审查过程中，若某段代码的存在正是为了遵守某条避障规则，则**禁止将其视为冗余代码删除**。
 
 ---
 

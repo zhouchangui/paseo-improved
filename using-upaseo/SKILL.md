@@ -9,7 +9,7 @@ description: >-
 
 # Using Upaseo (核心开发工作流技能)
 
-本技能为唯一的完整开发工作流入口。它将一项任务在完全本地化的 `upaseo` 基座上驱动，严格通过：**避障前置 → 自主复杂度与风险判定 → 微改快速通道或 quick/full 模式 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 风险分级 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
+本技能为唯一的完整开发工作流入口。它将一项任务或一个已落盘的 goal 在完全本地化的 `upaseo` 基座上驱动，严格通过：**可选 goal 读取 → 避障前置 → 自主复杂度与风险判定 → 微改快速通道或 quick/full 模式 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 风险分级 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
 
 **User's request:** $ARGUMENTS
 
@@ -26,7 +26,7 @@ description: >-
 ## 执行流程图
 
 ```
-Step 0: 偏好读取 + .paseo/ 目录初始化
+Step 0: 可选 goal 读取 + .paseo/ 目录初始化
 Step 0.1: 前置读取 .paseo/learnings.jsonl (避障)
 Step 0.2: 自主判定执行模式 (micro / quick / full)
   │
@@ -73,9 +73,9 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 1. 读取 `~/.paseo/orchestration-preferences.json` 以获取底层 Agent 的 Provider 分发。
 2. **UI 设计 Gemini 专属约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider **强制限定为 `gemini` 系列模型**。无 Gemini 可用时，暂停并通知用户，不得降级。
 3. **自动初始化 `.paseo/` 运行态目录、`.agents/story/` 历史资产库与 `AGENTS.md` 引用自愈**：
-   - 运行 `mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.agents/story` 确保目录结构存在。
+   - 运行 `mkdir -p <项目根目录>/.paseo/goals`、`mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.agents/story` 确保目录结构存在。
    - 若 `<项目根目录>/.paseo/todos.md` 缺失，创建最小 todo 模板；后续用户提到 todo/待办/backlog 时交由 `/upaseo-todo` 写入，不只保留在对话里。
-   - 历史资产库自愈：检查 `.agents/story/` 目录下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。若有任何文件缺失，自动将 `using-upaseo/references/` 下对应的模板文件（例如 `stories_template.md` 等）拷贝/写入生成至该目录下，确保架构基础资产库健全。如果当前项目是遗留或老项目，**推荐手动触发运行 `/upaseo-init` 技能**来进行代码的深度扫描和资产的逆向初始化整理。
+   - 历史资产库自愈：检查 `.agents/story/` 目录下是否存在 `stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。若有任何文件缺失，自动将 `upaseo-init/references/templates/` 下对应的模板文件（例如 `stories.md` 等）拷贝/写入生成至该目录下，确保架构基础资产库健全。如果当前项目是遗留或老项目，**推荐手动触发运行 `/upaseo-init` 技能**来进行代码的深度扫描和资产的逆向初始化整理。
    - `AGENTS.md` 引用自愈：若项目根目录缺失 `AGENTS.md`，创建一个简洁根指引；若已存在但没有 `.agents/story/` 引用，幂等追加一个 `upaseo` 资产引用段落。该段落必须说明 `.paseo/` 只保存运行态上下文，`.agents/story/` 保存长期项目资产，并列出六个资产文件。
 4. **Paseo 命令行自动检测与初始化安装**：
    - 检查当前系统 `PATH` 中是否能成功执行 `paseo`（通过 `which paseo` 或运行 `paseo --version`）。
@@ -94,13 +94,17 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 
 **本步骤为整个工作流的第零优先级动作，在任何其他步骤之前必须无条件执行。**
 
-1. 检查当前项目根目录下是否存在 `.paseo/learnings.jsonl` 文件。
-2. 若文件存在，**必须立即使用 `view_file` 工具完整读取**。
-3. 逐行解析其中的 JSON Lines 记录，提炼出所有历史避障规则。
-4. 将提炼出的规则作为**本会话全局硬约束**，在后续所有阶段的决策和指令中绝对遵守，不得违反。
-5. 若文件不存在，跳过本步骤，继续正常流程。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为全量(`command_error|wrong_assumption|tool_misuse|design_flaw`)，读取顺序为先 global(`~/.paseo/global-learnings.jsonl`)后项目(`.paseo/learnings.jsonl`)，提炼出的规则作为本会话全局硬约束，在后续所有阶段的决策和指令中绝对遵守。
 
-> **示例**：若 `learnings.jsonl` 中有一条 `{"category": "command_error", "mitigation": "docker compose 必须指定 -p dingding"}`，则本会话中所有涉及 `docker compose` 的命令都必须自动附加 `-p dingding`。
+### 0.15 可选 Goal 输入读取 (Optional Goal Intake)
+
+`upaseo-goal` 是可选流程，不是必经前置。`using-upaseo` 可以直接从用户任务启动，也可以在用户已经确认并落盘 goal 之后，从 goal 文件开始规划。
+
+- 若用户提供了 `.paseo/goals/<slug>.md` 的路径、slug，或明确说“按这个 goal 继续”，必须先读取该 goal 文件。
+- 若没有 goal 文件，直接从当前用户请求提炼工作目标并继续，不要求用户先运行 `/upaseo-goal`。
+- **目录边界**：goal 只存放在 `.paseo/goals/`；plan 只存放在 `.paseo/plans/`。严禁把迭代设计、执行状态或实现细节写回 goal 文件。
+- 若从 goal 文件进入，必须把 goal 中的 `目标`、`边界`、`验证` 视为规划输入约束；plan 负责拆解实现路径，不得改写或稀释这些约束。若发现 goal 本身有歧义，先和用户确认，再继续产出 plan。
+- 若从 goal 文件进入，主计划 slug 默认与 goal 文件 slug 对齐；随后在 `.paseo/plans/<slug>.md` 产出独立 plan。
 
 ### 0.2 自主复杂度与风险判定 (Complexity and Risk Auto-Assessment)
 
@@ -152,7 +156,7 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 - **快速模式下跳过此步骤。**
 
 ### 4. 增量迭代计划制定 (Incremental Iteration Planning)
-方案确定后，Orchestrator 必须将整个技术方案切分为数个紧凑的**增量迭代（Incremental Iterations）**。此时只允许形成路线图级别的迭代假设，具体功能设计和验收标准必须在每个迭代开始前通过“迭代计划评审会”定稿。
+方案确定后，Orchestrator 必须将整个技术方案切分为数个紧凑的**增量迭代（Incremental Iterations）**。若本次是从 `.paseo/goals/<slug>.md` 启动，先把 goal 翻译成可执行路线图；若不是，则直接从用户任务提炼路线图。此时只允许形成路线图级别的迭代假设，具体功能设计和验收标准必须在每个迭代开始前通过“迭代计划评审会”定稿。
 在 `.paseo/plans/<slug>.md` 写入整体路线图（Source of Truth），标记 Iterations：
 ```markdown
 ## 迭代路线图

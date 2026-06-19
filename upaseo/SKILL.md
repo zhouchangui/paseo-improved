@@ -136,14 +136,14 @@ Debug order:
 
 ## Shared Learnings Format
 
-Workflow skills use the project-level `.paseo/learnings.jsonl` file for hard mitigation rules. `using-upaseo` owns the lifecycle of this file; lower-level skills may read it when they are launched standalone or when they build worker prompts.
+Workflow skills use learnings files for hard mitigation rules. The full precheck procedure, read order (global + project), category scoping, aging rules, and write format are defined in the **single source of truth**: `upaseo/references/learnings-precheck.md`.
 
-文件格式为 JSON Lines，每条记录：
-```json
-{"timestamp":"<ISO8601>","session_id":"<conversation-id>","category":"<command_error|wrong_assumption|tool_misuse|design_flaw>","failed_attempt":"<简述>","mitigation":"<应该怎么做>"}
-```
+Key points (full detail in the reference):
 
-容量上限 30 条。超过时由 Orchestrator (`using-upaseo`) 精炼合并旧条目。写入前去重。
+- Read order: `~/.paseo/global-learnings.jsonl` first (cross-project, maintained by `/upaseo-ship`), then project-level `.paseo/learnings.jsonl`.
+- `using-upaseo` owns the lifecycle of the project-level file; `/upaseo-ship` owns the global file sync.
+- Any skill that injects constraints reads both files per the reference's category scoping.
+- Capacity cap 30 lines/file. Overflow handled by aging-then-trim per the reference.
 
 ## Workflow Recovery Ownership
 

@@ -24,16 +24,7 @@ Read the **upaseo** skill — provider for the advisor comes from orchestration 
 
 ## 前置避障读取
 
-在构建 briefing 前，检查当前项目根目录下是否存在 `.paseo/learnings.jsonl`。若存在，使用 `view_file` 读取并提炼避障规则，将规则作为 advisor briefing 的前缀注入：
-
-```
-[避障规则 - 来自历史教训，请在分析中纳入考量]
-- <规则1>
-- ...
-[避障规则结束]
-```
-
-若文件不存在则跳过。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `design_flaw|wrong_assumption`。若提炼出避障规则，将其作为 advisor briefing 的前缀注入。
 
 ## The briefing
 

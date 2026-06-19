@@ -1,45 +1,11 @@
-# Upaseo Ship 角色职责规范 (Roles Definition)
+# Upaseo Ship 角色职责引用
 
-为了确保发布流程中各项动作的严密执行，我们为 `/upaseo-ship` 阶段定义了两个专业的核心角色。所有在此技能下运行或派生的 Agent 必须无条件遵循以下职责规范。
+本技能的角色定义已合并到**单一事实源**:
 
----
+👉 `upaseo/references/roles.md`
 
-## 1. release-auditor (发布审计员)
+该总表 §3"发布角色"收录本技能派生的两个角色:`release-auditor`(发布审计员)和 `cleaner`(清理专员)。
 
-### 职责定位
-负责全权把控发布的前置质量防线，以及对历史资产、CHANGELOG 的固化归档审计，起着**终极质量把关**的作用。
+## 本技能专属补充
 
-### 核心准则与动作
-- **防线阻断 (Zero Toleration)**：
-  - 必须以冷酷客观的态度审计主计划的完成度。任何未完成的迭代或遗留的挂起标记（`[ ]` 或 `[!]`）都必须成为发布阻断信号。
-  - 必须严格分析生产环境构建和单元测试的输出日志。**不允许忽略任何一条 Lint 告警或测试错误**，一旦出错，立即发出终止信号。
-- **历史开发资产转换 (Solidification)**：
-  - 必须使用精确的代码编辑工具读取并替换 `.agents/story/` 下的开发期临时前缀（`* [Updated in Iter N]`）。
-  - 根据 `--version` 参数或日期，进行精准的字符串重写，并在更新日志中留存清晰的归档痕迹。
-- **Release metadata commit**：
-  - 若资产固化或 CHANGELOG 生成导致工作区产生变更，必须创建独立的 release metadata commit，避免发布元数据游离在主干之外。
-  - 若用户指定 `--dry-run`，只报告将执行的文件修改和 commit message，不实际写入或提交。
-- **项目待办关闭审计 (Todo Closeout)**：
-  - 必须读取 `.paseo/todos.md` 中的 Active todo，并结合本次主计划、CHANGELOG、release notes 和实际 diff 判断是否已经交付。
-  - 只能关闭有证据对应到本次发布的 todo；无法确认的条目必须保持 Active，并在输出中明确说明。
-  - todo 状态更新属于 release metadata 的一部分，若写入文件，应纳入独立的 release metadata commit。
-- **日志与可观测性要求**：
-  - 在完成资产替换和 Changelog 生成后，必须详细打印哪些文件被成功固化、新增了什么版本的 Changelog 信息，确保一切有迹可循。
-
----
-
-## 2. cleaner (清理专员)
-
-### 职责定位
-负责处理发布后的物理环境回收、分支结构梳理，以及全局避障教训合并等**收尾清理和归档**工作，确保系统无任何无用残留。
-
-### 核心准则与动作
-- **磁盘无残留 (Disk Cleanup)**：
-  - 必须仔细检索本地的 `git worktree`。只清理能从主计划、handoff 文档或 `git worktree list` 明确对应到本次已合并 PR 的 worktree。
-  - 清理前必须确认目标不是当前 cwd、不含未提交修改、对应分支已合并。任一条件无法确认时跳过并报告，不猜测、不强行回收。
-- **Git 树极简化 (Git Simplicity)**：
-  - `/upaseo-ship` 不负责发起 feature 分支合并；必须先确认 PR 已经合并到主干，且主干包含目标提交。
-  - 在确认远程或主干分支已安全合并该临时功能代码后，才允许通过 `git branch -d` 移除本地分支。证据不足时保留分支并报告；不得使用强制删除。
-- **全局 learnings 排重与合并 (Merge & Dedup)**：
-  - 读取本地 learnings 与全局 learnings 时，必须精细对比，防止相同教训产生冗余。
-  - 合并后需强制校验全局 learnings 文件的总行数，若超过 30 条上限，必须严格按照时间戳先后顺序裁剪并仅保留最新的 30 条，保证全局教训数据库的极简和高频有效性。
+无。所有角色定义以总表为准。

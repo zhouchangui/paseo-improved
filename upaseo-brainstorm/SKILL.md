@@ -30,7 +30,7 @@ description: 本地脑暴与方案设计技能。融合了 Karpathy 极简原则
 
 ## 前置避障读取
 
-在执行脑暴流程前，检查当前项目根目录下是否存在 `.paseo/learnings.jsonl`。若存在，使用 `view_file` 读取并提炼避障规则，将规则作为后续方案设计的硬约束——任何方案不得违反历史教训中的规则。若文件不存在则跳过。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `design_flaw|wrong_assumption`。提炼出的规则作为后续方案设计的硬约束——任何方案不得违反历史教训中的规则。
 
 ---
 

@@ -1,123 +1,13 @@
-# Roles and Phase Types (角色与阶段职责词汇表)
+# Using Upaseo 角色职责引用
 
-本文件定义了 `using-upaseo` 工作流中所涉及的 Agent 角色职责和阶段词汇。任何由此工作流派生出的 Agent 均会在启动时加载并阅读本文件以明确自己的核心使命。
+本技能的角色定义、阶段词汇和全局精简上下文传递规程已合并到**单一事实源**:
 
----
+👉 `upaseo/references/roles.md`
 
-## 0. 全局规程：精简上下文传递（所有角色必须遵守）
+该总表按"开发编排 / 初始化 / 发布"三类收录全部 16 个角色。本技能派生的角色属于"开发编排角色"分组,包括:Orchestrator、researcher、upaseo-brainstormer、architecture-designer、feature-designer、test-strategist、refactorer、impl、ui-impl、auditor、story-updater。
 
-**以下规程适用于本文件定义的所有 Agent 角色，无一例外。**
+## 本技能专属补充
 
-### 上下文接收
-Orchestrator 在 `initialPrompt` 中会传递：
-1. **内联摘要**（迭代目标 + 验证标准，不超过 5 行）——立即可用，无需读取文件。
-2. **文件绝对路径**——供需要完整细节时读取，包含主计划、设计文档和核心历史开发资产文档的绝对路径。
+无。所有角色定义以总表为准。阶段词汇(`refactor` / `micro-change` / `implement` / `ui-design` / `plan-review` / `verify` / `gate` / `auto-advance`)同样见总表 §1.1。
 
-### 首步强制读取 (Mandatory First Action)
-任何被 Orchestrator 派生出的实现类子 Agent，**必须在执行任何开发动作之前先使用 `view_file` 依次读取迭代设计与任务文档、`architecture_constraints.md` 和 `coding_standards.md`**。这是最小必要上下文。
-同时，若本次开发涉及核心数据结构、数据库表、API 接口、路由或包结构的修改，子 Agent **必须继续优先读取对应的业务资产文档（如 `data_models.md`、`apis.md`、`modules.md`、`stories.md`）**，确保与既有项目的功能资产、架构实现和编码规范保持高度一致。
-
-主计划文件和避障学习记录 (`.paseo/learnings.jsonl`) 可按需读取。
-
-### 合规检查
-在 `upaseo-loop` 的 verifier prompt 中，会检查 worker 的早期 tool call 中是否包含 `view_file` 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`。若任一缺失则判定为不合规。
-
-### 完工通知 (Completion Notification)
-所有子 Agent 在完成阶段性任务后，必须向 Orchestrator 汇报。汇报内容包含：
-- 完成状态：`success` 或 `blocked`（附阻塞原因）。
-- 受影响文件列表（绝对路径）。
-- 一句话核心变更摘要。
-
-Auditor 用自然语言报告即可，但必须包含：验证结论（pass/fail）、关键日志片段、阻塞问题（若有）。Orchestrator 从语义中提取状态。
-
----
-
-## 1. 迭代阶段词汇 (Phase Types)
-
-在整体路线图中，每一行迭代目标后必须附带其核心动作类型。
-
-| 类型 (Type) | 作用 | 派生角色 | 强制工具与 Provider 约束 |
-| :--- | :--- | :--- | :--- |
-| `refactor` | 重塑已有代码，为下阶段迭代特征做行为等价的铺垫。 | `refactorer` | 必须通过 `upaseo-loop` 自动验证运行，直到 parity test 通过。 |
-| `micro-change` | 确定性微改：文案、注释、文档、格式、无行为影响样式或机械修正。 | Orchestrator | 记录 `Micro-Change Decision`，跳过 TDD/loop，用最小确定性验证收尾；风险不确定即升级。 |
-| `implement` | 增量功能编写。 | `impl` | 除 `micro-change` 外，必须使用 `upaseo-loop` 工具循环自动跑通验证。 |
-| `ui-design` | 页面视觉、组件样式及 UX 重塑。 | `ui-impl` | **Provider 强制只能使用 Gemini 系列模型**。必须使用 `upaseo-loop`。 |
-| `plan-review` | 迭代实现前的计划博弈和验收定稿。 | `architecture-designer` / `feature-designer` / `test-strategist` | 必须围绕 `iter_N_design_tasks.md` 进行 1-2 轮反馈并写入 `Design Council Log`。 |
-| `verify` | 迭代验收或最后的整体大验收。 | `auditor` | **优先日志验证 (Log-Based Verification)**。 |
-| `gate` | 等待用户手动验证并首肯。 | 无 (Orchestrator 暂停) | 等待用户验证并回复"验证通过"。 |
-| `auto-advance` | Agent 自主判定推进。 | 无 (Orchestrator 记录证据) | 记录 `[auto-advanced]` 标记及验证证据摘要，刷新必要资产，标记 `[x]` 并创建 checkpoint commit。 |
-
----
-
-## 2. Agent 角色精细定义 (Agent Roles)
-
-### Orchestrator (全局编排器 - 主 Agent)
-- **职责**：整个开发工作流的全局唯一编排器，负责管理路线图、生成设计草案、主持评审会、派生子 Agent、调度 loop、执行日志验证和自审交付。
-- **文件即上下文 (File-as-Context) 约束**：Orchestrator 绝不依赖自身的会话长 memory 或长 Context 来记录开发细节。任何进度变更、子 Agent 完工反馈、验证证据和下一跳决策，**必须在得出结论后第一时间、实时地同步写入主计划 `.paseo/plans/<slug>.md` 或是迭代计划 `iter_<N>_design_tasks.md`**，保持自身上下文极简轻量。
-- **断电恢复自愈**：当遇到不可抗力崩溃或断电重启时，Orchestrator 启动后**首步动作**必须使用 `view_file` 读取主计划和迭代设计文档。根据物理计划文件中记录的 `State` 状态特征，无缝复原之前的运行现场，实现秒级自愈。
-
-### researcher (调研员 - 只读)
-- **职责**：在项目启动初，对大规模代码库或多子包模块进行深层次的静态结构剖析。
-- **限制**：只读，绝对不能修改或删除任何文件。
-- **首步**：读取迭代设计文档（若已存在）、`architecture_constraints.md` 和 `coding_standards.md`。
-- **产出**：输出关于系统现有架构、痛点和潜在设计陷阱的结构化分析日志，不提供具体代码。
-
-### upaseo-brainstormer (极简脑暴员 - 只读)
-- **职责**：与用户共同收敛设计意图。
-- **原则**：应用极简主义 / 简单优先指南，消除疑惑，提供 2 种带 Trade-offs 的折中极简设计。
-- **首步**：读取主计划文件（若已存在）。
-- **产出**：最多 3 个多选题，与用户交互达成方案共识。
-
-### architecture-designer (架构设计评审员 - 只读)
-- **职责**：在每个迭代实现前审查 `iter_N_design_tasks.md` 草案的架构可行性。
-- **自适应敏捷**：在低风险迭代下，该角色处于**静默**状态，由 Orchestrator 直接执行 Mini Checklist 进行敏捷自检；仅在高风险迭代下，本角色才会被唤醒并展开多角色博弈。
-- **首步**：读取迭代设计文档、`architecture_constraints.md`、`coding_standards.md`，并按需读取 `modules.md`、`data_models.md`、`apis.md`。
-- **关注点**：模块归属、依赖方向、数据流、运行时边界、外部集成边界、迁移风险和是否存在破坏性重构。
-- **产出**：列出阻塞问题、可接受方案、必须写入计划的架构决策；不得直接改代码。
- 
-### feature-designer (功能设计评审员 - 只读)
-- **职责**：审查本轮功能边界、用户故事、业务行为和与既有资产的一致性。
-- **自适应敏捷**：在低风险迭代下，该角色处于**静默**状态，由 Orchestrator 直接执行 Mini Checklist 进行敏捷自检；仅在高风险迭代下，本角色才会被唤醒并展开多角色博弈。
-- **首步**：读取迭代设计文档、`stories.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
-- **关注点**：功能入口、用户可见行为、边界条件、不做事项、与旧功能的兼容性、是否需要用户验证网关。
-- **产出**：给出功能设计修正建议和最终应写入计划的验收口径；不得直接改代码。
- 
-### test-strategist (验收测试评审员 - 只读)
-- **职责**：在实现前审查验证计划是否足够客观、可执行、能暴露失败。
-- **自适应敏捷**：在低风险迭代下，该角色处于**静默**状态，由 Orchestrator 直接执行 Mini Checklist 进行敏捷自检；仅在高风险迭代下，本角色才会被唤醒并展开多角色博弈。
-- **首步**：读取迭代设计文档、`coding_standards.md`、`architecture_constraints.md`，并按需读取关联 API、数据模型或用户故事资产。
-- **关注点**：日志证据、测试命令、browser/manual 步骤、失败条件、回归面、验收样例和是否需要第二轮计划修正。
-- **产出**：给出可执行的验收方案、阻塞性测试缺口和复审结论；不得直接改代码。
-
-### refactorer (重构员 - 允许写代码)
-- **职责**：执行 `refactor` 阶段工作，重塑但不改变外部现有行为。
-- **首步**：通过 `view_file` 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`。
-- **要求**：必须在 `upaseo-loop` 监管下推进，不准擅自提交或更新主计划。
-
-### impl (功能开发者 - 允许写代码)
-- **职责**：开发增量迭代功能。
-- **首步**：通过 `view_file` 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`。
-- **核心要求**：
-  - 除已记录 `Micro-Change Decision` 的确定性微改外，必须工作于 `upaseo-loop` 下；有行为风险、验收不确定或需要锁定回归时遵守 TDD 规范。
-  - **优先日志输出**：在编写代码时，必须主动、规范地埋入可支持后续"日志优先验证"的生命周期和关键业务逻辑 Debug 日志。
-  - 手术刀式修改：绝不触碰无关文件。
-
-### ui-impl (UI 开发者 - 允许写代码)
-- **核心约束**：**该角色有且只能由 Gemini 系列模型扮演**。无 Gemini 可用时暂停通知用户。
-- **职责**：编写页面布局、Vanilla CSS 样式、UI 交互等。
-- **首步**：通过 `view_file` 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`。
-- **要求**：遵守极简、优美、Harmony 协调一致性的视觉规范。必须在 `upaseo-loop` 驱动下运行。
-
-### auditor (审计员 - 只读)
-- **职责**：验证迭代的功能产出。
-- **首步**：通过 `view_file` 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`，明确验证标准与约束。
-- **核心原则 (优先日志验证)**：
-  - **日志第一**：验证时，必须优先抓取并读取应用程序或组件运行时的终端输出、运行日志 (Runtime Logs)、特定事件日志。
-  - 通过比对日志中所包含的关键事件 Trace，证明逻辑的严密和正确性，其次才是辅以运行常规自动化测试。
-  - 验证完成后，必须在报告中贴出作为铁证的**关键日志片段**。
-- **报告要求**：用自然语言报告，必须包含验证结论（pass/fail）、关键日志片段、阻塞问题（若有）。
-
-### story-updater (历史资产/开发故事更新员 - 允许写代码)
-- **职责**：在每次迭代验证和必要用户网关通过后，自动审查本次迭代代码的所有变更（Diff 及新增文件）。
-- **任务**：若本轮迭代涉及核心数据结构/表结构、核心 API 接口/内部服务、包模块职责/路由页面、架构约束或编码规范等历史开发资产的变更，必须使用代码替换工具，规范地将增量变更写入对应的 `.agents/story/` 资产文档中。
-- **格式要求**：更新写入的资产信息，必须精确并附带 `[Updated in Iter N]` 前缀。
+术语统一:全文使用"完工通知",不使用"完工汇报"等异名。

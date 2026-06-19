@@ -15,7 +15,7 @@ Read the **upaseo** skill — provider for the receiving agent comes from orches
 
 ## 前置避障读取
 
-在构建 handoff prompt 前，检查当前项目根目录下是否存在 `.paseo/learnings.jsonl`。若存在，使用 `view_file` 读取并提炼避障规则，注入到 handoff prompt 的 `## 避障规则` 段落中。若文件不存在则在 handoff prompt 中省略此段落。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为 `command_error|tool_misuse`。若提炼出避障规则，注入到 handoff prompt 的 `## 避障规则` 段落中(格式见 reference §1);无规则则省略该段落。
 
 ## 上下文移交文档
 

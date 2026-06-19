@@ -22,17 +22,7 @@ Loops are a CLI primitive: `paseo loop run`. Manage with `paseo loop ls`, `paseo
 
 **本步骤必须在构建 worker prompt 和启动任何循环之前无条件执行。**
 
-1. 检查当前项目根目录下是否存在 `.paseo/learnings.jsonl` 文件。
-2. 若文件存在，**必须立即使用 `view_file` 工具完整读取**。
-3. 逐行解析其中的 JSON Lines 记录，提炼出所有历史避障规则。
-4. **将提炼出的避障规则注入到 worker prompt 中**，作为 worker 的硬约束前缀。例如：
-   ```
-   [避障规则 - 来自历史教训，必须严格遵守]
-   - docker compose 命令必须指定 -p dingding
-   - ...
-   [避障规则结束]
-   ```
-5. 若文件不存在，跳过本步骤，继续正常流程。
+执行标准避障前置读取，见 `upaseo/references/learnings-precheck.md`。本技能相关 category 为全量(`command_error|wrong_assumption|tool_misuse|design_flaw`)。若提炼出避障规则，**必须将其作为 worker prompt 的硬性前缀注入**，格式见 reference §1。
 
 ## Your job
 
