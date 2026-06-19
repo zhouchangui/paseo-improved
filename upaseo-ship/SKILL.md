@@ -69,6 +69,7 @@ description: >-
    - 若 `.paseo/todos.md` 存在，必须根据本次主计划、CHANGELOG、release notes 和实际 diff 匹配与本次发布明确相关的 Active todo。
    - 只关闭有证据证明已经交付的 todo；将其标记为 `[x]`，补充 `completed: YYYY-MM-DD` 与 `shipped: <version-or-date>`，并移动到 `## Done` 或保留在原条目但状态改为完成。
    - 无法确认是否完成的 todo 必须保持 Active，并在 ship 输出中列为“仍未关闭”，不得为了清爽而误关。
+   - **延迟债务复核 (`type: debt`)**：对 Active 中 `type: debt` 的条目单独复核——若被推迟的“正确做法”已在本次 release 实现（diff/测试有证据），标记 resolved 移到 Done；否则保持 Active 并在 ship 输出中汇总“未偿还技术债务”清单，不得静默遗漏。
    - 若 todo 更新导致工作区产生变更，应纳入 Release metadata commit；`--dry-run` 时只展示将更新的 todo，不写文件。
 
 ### Step 3: 物理工作区与分支安全清理 (Physical Cleanup)

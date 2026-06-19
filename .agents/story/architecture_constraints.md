@@ -26,6 +26,9 @@
 * [Updated in Iter 4] plan 文件必须含 `schema_version` 字段（当前 `1`），决定迭代设计文件命名约定；`schema_version: 0`（无字段）视为旧文件需迁移。迁移规则定义在 `using-upaseo/SKILL.md` 异常恢复小节。
 * [Updated in Iter 5] `requirement.md` 已归档到 `docs/history/requirement.md`，仅作历史参考；当前权威工作流规范分散在 `using-upaseo/SKILL.md`、`upaseo/SKILL.md`、`.agents/story/` 与 `scripts/validate.sh`。
 * [Updated in Iter 5] `scripts/validate.sh` 重构为三层架构（L1 结构 / L2 交叉引用 / L3 行为），并由 GitHub Actions (`.github/workflows/validate.yml`) 与本地 pre-commit (`scripts/pre-commit.sh`) 自动执行；硬失败阻断，符号链接类（本机部署态）失败仅警告。
+* [Updated in Iter 6] `upaseo-reviewer` 融合 open-code-review (`ocr`) 审查引擎为可选外部 CLI 边界：完整模式默认 Tier 1 调 `ocr review`，ocr 不可用（未装/未配 LLM/超时）必须降级 Tier 2 (Agent 模拟审计)，不得因外部依赖缺失而跳过审查。
+* [Updated in Iter 6] `upaseo-simplify` 融合 ponytail 精简阶梯，按项目类型条件启用：diff 含代码扩展名走完整 6 级 ladder + 删除清单；纯文档/配置降级为一句话 YAGNI 自检。安全红线（信任边界/防数据丢失/安全/a11y/避障防御代码）永不入删除清单。
+* [Updated in Iter 6] 延迟债务 (`type: debt`) 单一事实源为 `.paseo/todos.md`，不另起 ledger 文件；`upaseo-ship` 发布前必须复核 `type: debt` 条目。
 
 ---
 

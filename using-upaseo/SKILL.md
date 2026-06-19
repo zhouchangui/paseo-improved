@@ -3,13 +3,13 @@ name: using-upaseo
 description: >-
   核心开发工作流编排技能。运行重度开发任务的生命周期管理，内置自主复杂度判定、
   微改快速通道、增量式迭代推进、独立迭代设计文档、自主推进/用户验证网关、
-  风险分级 upaseo-loop、UI 走 preferences、优先日志验证、PR 提交前强制自审简化、
-  会话复盘与避障学习落盘。Use for /using-upaseo development tasks, including optional quick/full, autopilot/gate, worktree, and PR-per-iteration modes.
+  风险分级 upaseo-loop、UI 走 preferences、精简阶梯前置门、优先日志验证、
+  PR 提交前强制自审简化（删除清单+延迟债务）与大代码审查(ocr)、会话复盘与避障学习落盘。Use for /using-upaseo development tasks, including optional quick/full, autopilot/gate, worktree, and PR-per-iteration modes.
 ---
 
 # Using Upaseo (核心开发工作流技能)
 
-本技能为唯一的完整开发工作流入口。它将一项任务或一个已落盘的 goal 在完全本地化的 `upaseo` 基座上驱动，严格通过：**可选 goal 读取 → 避障前置 → 自主复杂度与风险判定 → 微改快速通道或 quick/full 模式 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 风险分级 Loop 实现 → UI 走 preferences → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
+本技能为唯一的完整开发工作流入口。它将一项任务或一个已落盘的 goal 在完全本地化的 `upaseo` 基座上驱动，严格通过：**可选 goal 读取 → 避障前置 → 自主复杂度与风险判定 → 微改快速通道或 quick/full 模式 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 风险分级 Loop 实现（含精简阶梯前置门） → UI 走 preferences → 优先日志验证 → 提交PR前强制自审与简化（删除清单+延迟债务）与大代码审查(ocr) → 会话复盘学习落盘**的闭环推进。
 
 **User's request:** $ARGUMENTS
 
@@ -61,7 +61,7 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
                                                 │
        ┌────────────────────────────────────────┘
        ▼
-      自审与简化 ──> 提交 PR ──> 会话复盘 ──> 归档
+      阶梯前置门 ──> 自审与简化(删除清单+debt+ocr审查) ──> 提交 PR ──> 会话复盘 ──> 归档
 ```
 
 ---
@@ -228,6 +228,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 硬性读取顺序：先读取迭代设计文档，再读取 `architecture_constraints.md` 和 `coding_standards.md`，然后按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。严禁跳过这些启动读取动作。严禁违反已有的核心历史开发资产、架构约束和编码规范进行重复造轮子、破坏性重构或风格漂移。
 
+- **精简阶梯前置门 (Simplification Ladder Gate)**：启动 loop 写代码之前，对照 `upaseo/references/simplify-ladder.md` 做 6 级阶梯自检（按项目类型条件启用：diff 含代码扩展名走完整 6 级；纯文档/配置降级为一句话 YAGNI 自检），把"本可停在更高 rung 却写多了"的实现挡在写代码之前。阶梯判定结论一句话写入迭代设计草案（如"用了 stdlib 的 X，跳过 5/6"）。微改快速通道跳过本前置门。
 - 除微改快速通道外，启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码；快速模式也必须使用轻量 loop（建议 `max-iterations <= 3`），不得由 Agent 直接绕过 loop 自行修改。
 - 如果这是 UI 或 Styling 改动，**`upaseo-loop` 的 worker provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；未配置时默认 Gemini 系列，用户 preferences 显式指定非 Gemini 时以用户为准**（详见 `upaseo/SKILL.md`）。
 - TDD 模式只用于有行为风险、验收不确定或需要锁定回归的改动：先写失败测试/日志埋点，再让它跑通。微改快速通道不得为了“走流程”新增低价值测试。
@@ -295,15 +296,19 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 1. **极致精简自理 (upaseo-simplify)**：
    - 强制加载并执行本地 `upaseo-simplify` 技能。
-   - 彻底梳理 diff，删除过渡性未使用代码、废弃 imports、多余注释，精简逻辑。
+   - 对照 `upaseo/references/simplify-ladder.md` 产出**删除清单 (Delete-List)**：对 diff 逐 hunk 重跑阶梯，逐条决定 `[cut]` / `[shrink]` / `[keep]`，应用后重跑验证确认未破坏行为。
+   - 为求简而取的捷径（主动落到更低 rung）必须登记为延迟债务：写入 `.paseo/todos.md` 的 `## Active` 桶，带 `type: debt` 字段（格式见 `upaseo-todo/SKILL.md`）。
+   - 删除清单摘要（`[cut] N / [shrink] M / [keep] K`）与新增 debt 条目数写入交付报告。
 
 2. **严苛自审质检 (upaseo-reviewer)**：
    - 强制加载并执行本地 `upaseo-reviewer` 技能。
-   - 进行质量、边界防御、并发安全和代码坏味道自审，生成自审确认表。
-   - 自审发现任何缺陷，必须在本地 100% 闭环修复。
+   - **完整模式默认 Tier 1 (ocr)**：自检 `command -v ocr && ocr llm test`，通过则调 `ocr review --audience agent --format text --from <base> --to HEAD --background "<迭代目标>"`；ocr 不可用（未装/未配 LLM/超时）降级 Tier 2 (Agent 模拟审计) 并在报告标注。快速模式可选 ocr；微改跳过。
+   - findings 按严重度分级：blocker（安全/正确性/资源泄漏）必须本地 100% 闭环修复，未修复不得提 PR；minor（风格/可读性）记录进报告不阻断，可登记 `type: debt`。
+   - 生成含 ocr findings 摘要或 Agent 清单结论的自审确认表。
 
 3. **创建 PR 并交付 (PR Fallback 智能兜底)**：
    - 在 worktree 中进行整洁提交（Git commit），然后尝试运行 `gh pr create` 提交 PR，将 PR 链接和自审报告呈给用户。
+   - 自审报告必须包含三段摘要：删除清单（`[cut]/[shrink]/[keep]` 计数）、审查引擎结论（ocr findings blocker/minor 或 Agent 清单）、新增 `type: debt` 条目数。
    - 提交前必须只 stage 本任务相关文件；若工作区包含无关改动，保持原样并在交付报告中列出“未纳入提交的无关改动”。
    - **PR 智能兜底 (PR Fallback)**：如果本地环境未安装 `gh` CLI 命令行、网络阻断或未授权登录导致 PR 创建失败，系统**必须智能且温和地降级为本地提交模式**。在已确认 staged 内容仅包含本任务相关文件后，创建一个语义整洁的 Commit，并清晰打印引导：“*本地 gh CLI 未授权或缺失，已为您在本地完成整洁 Commit，请您手动执行 git push / 提交 PR。*”若无法隔离 unrelated changes，停止并请用户确认，不得把无关改动混入提交。
    - **最终 PR 阶段必须等待用户审批**，不可自动合并。

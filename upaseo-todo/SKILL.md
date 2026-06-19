@@ -59,18 +59,21 @@ This file is the Source of Truth for project-level todos captured by `/upaseo-to
 新增条目格式：
 
 ```markdown
-- [ ] T-YYYYMMDD-HHMM-<slug> | <title> | source: <user/plan/ship> | created: YYYY-MM-DD | links: <plan/file/none> | note: <short context>
+- [ ] T-YYYYMMDD-HHMM-<slug> | <title> | source: <user/plan/ship/simplify> | type: <task|debt> | created: YYYY-MM-DD | links: <plan/file:line/none> | note: <short context>
 ```
+
+> `type` 字段缺省为 `task`。`type: debt` 用于登记精简阶梯（`upaseo/references/simplify-ladder.md`）为求简而取的延迟债务：`note` 写"捷径描述 + 被推迟的正确做法"，`source` 填 `simplify`，`links` 指向关联代码 `file:line`。debt 条目默认进 `## Active`，由 `upaseo-ship` 发布前复核。
 
 状态更新格式：
 
 ```markdown
-- [x] T-YYYYMMDD-HHMM-<slug> | <title> | source: <user/plan/ship> | created: YYYY-MM-DD | completed: YYYY-MM-DD | shipped: <version/date/none> | links: <plan/file/none> | note: <short result>
+- [x] T-YYYYMMDD-HHMM-<slug> | <title> | source: <user/plan/ship/simplify> | type: <task|debt> | created: YYYY-MM-DD | completed: YYYY-MM-DD | shipped: <version/date/none> | links: <plan/file:line/none> | note: <short result>
 ```
 
 ## Matching Rules
 
 - 新增前先扫描 `## Active`，如果已有语义相同的 todo，只补充 note 或 links，不重复创建。
+- debt 条目（`type: debt`）同样进 `## Active`，按捷径描述语义去重：若同一捷径已登记，只补充 links/note，不重复建条目。
 - 如果用户说“这个 todo 完成了”“关闭上一个 todo”，优先匹配最近新增或标题最接近的 Active 条目。
 - 如果无法安全匹配完成/取消对象，不要猜；先列出候选并问用户确认。
 - 用户只随口提到普通英文单词 `todo` 但没有待办内容时，不写入文件，先问一句要记录什么。

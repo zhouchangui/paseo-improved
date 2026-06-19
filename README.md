@@ -10,8 +10,8 @@
 | `using-upaseo` | **唯一完整开发入口**：计划、评审、实现、验证、交付编排 | `/using-upaseo <task>` |
 | `upaseo-loop` | 实现闭环：worker/verifier 循环 | `/upaseo-loop <task>` |
 | `upaseo-brainstorm` | 脑暴收敛：极简方案设计 | 由 using-upaseo 自动调用 |
-| `upaseo-simplify` | PR 前代码极致精简 | 由 using-upaseo 自动调用 |
-| `upaseo-reviewer` | PR 前质量自审 | 由 using-upaseo 自动调用 |
+| `upaseo-simplify` | PR 前代码极致精简（融合 ponytail 精简阶梯 + 删除清单 + 延迟债务） | 由 using-upaseo 自动调用 |
+| `upaseo-reviewer` | PR 前质量自审（融合 ocr 大代码审查引擎，不可用降级 Agent 审计） | 由 using-upaseo 自动调用 |
 | `upaseo-init` | 项目初始化：自动构建 `.paseo/` 运行态目录、`.agents/story/` 资产库和 `AGENTS.md` 引用，并逆向扫描提炼六大资产 | `/upaseo-init` |
 | `upaseo-goal` | Goal 合成器：结合项目上下文和用户确认，把粗略描述整理成简洁、边界清楚、可验证的 goal，并落盘到 `.paseo/goals/` | `/upaseo-goal <rough request>` |
 | `upaseo-e2e` | 集成测试与 e2e 验证：先冻结环境和写用例，人工确认一次后再逐条执行，失败先复现并用 `gh` / `.github/issues` 上报 | `/upaseo-e2e <target or flow>` |

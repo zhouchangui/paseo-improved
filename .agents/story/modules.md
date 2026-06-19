@@ -31,6 +31,9 @@
 * [Updated in Iter 2] 多宿主兼容：`upaseo/SKILL.md` 维护宿主工具原语映射表；`using-upaseo`、`upaseo-loop`、`upaseo-handoff`、`upaseo-compact` 的子 Agent prompt / verifier / 恢复读取都引用该表，不硬编码单一宿主原语名。
 * [Updated in Iter 4] SoT 优先级链 compact > handoff > plan > goal 作为恢复读取顺序的权威定义；compact/handoff/plan/goal 文档模板各自声明 `Priority:` 元数据。
 * [Updated in Iter 5] 一致性校验脚本 `scripts/validate.sh` 三层结构（L1 结构 / L2 交叉引用 / L3 行为）；CI workflow `.github/workflows/validate.yml` 与本地 `scripts/pre-commit.sh` 自动执行。
+* [Updated in Iter 6] `upaseo-simplify` 吸收 ponytail 精简阶梯（6 级 ladder）+ 删除清单 (Delete-List) + 延迟债务 (`type: debt`)；单一事实源为 `upaseo/references/simplify-ladder.md`。`using-upaseo` §5.C 在 loop 启动前做阶梯前置门，§6 item 1 在 PR 前产出删除清单并登记 debt。
+* [Updated in Iter 6] `upaseo-reviewer` 吸收 open-code-review (`ocr`) 为 Tier 1 审查引擎（完整模式默认），Tier 2 为 Agent 模拟审计（降级/quick/微改）；findings 按 blocker/minor 严重度分级处理。
+* [Updated in Iter 6] 延迟债务登记到 `.paseo/todos.md`（`type: debt` 字段），由 `upaseo-ship` 发布前复核；不另起 ledger 文件。
 
 ---
 
