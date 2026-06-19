@@ -91,6 +91,7 @@ description: >-
 1. **全局避障数据库合并**：
    - 检查全局 `~/.paseo/global-learnings.jsonl` 文件是否存在（若不存在则自动新建）。
    - 将本项目本地 `.paseo/learnings.jsonl` 中积累的所有独创性避障规则增量导入并合并至全局文件中。
-   - **导入去重与上限控制**：合并时进行去重过滤（完全相同的 `failed_attempt` 与 `mitigation` 不重复导入）。若全局教训总条数超过 30 条，根据时间戳仅保留最新 30 条，确保全局教训高密度且不冗余。
+   - **导入去重与上限控制**：合并时进行去重过滤（完全相同的 `failed_attempt` 与 `mitigation` 不重复导入）。若全局教训总条数超过 30 条，先按 `upaseo/references/learnings-precheck.md` §4 的老化规则降级超 90 天未确认的条目，再按时间戳仅保留最新 30 条，确保全局教训高密度且不冗余。
+   - **写入方闭环说明**：本步骤是 global-learnings 的唯一写入方；读取方为所有技能的避障前置读取（先读 global 后读项目，见 `upaseo/references/learnings-precheck.md` §2）。因此本步骤写入的规则会在后续任意项目、任意技能的会话启动时被读取并按 category 注入，不再是"只写死功能"。
 2. **发布成功宣告**：
    - 打印醒目、带有成功勾选标记的发布总览，向用户展示成功固化的资产、更新的 Changelog、被清理的 Worktree 和已同步的全局 learnings 统计，圆满闭环交付。

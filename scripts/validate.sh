@@ -151,6 +151,18 @@ grep -q "PR 已经合并" "$ship_skill" 2>/dev/null && pass "SKILL.md 明确 shi
 grep -q "Release metadata commit" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含 release metadata commit" || fail "SKILL.md 缺失 release metadata commit"
 grep -q "不负责发起 feature 分支合并" "$ship_skill" 2>/dev/null && pass "SKILL.md 不在 ship 阶段发起 feature merge" || fail "SKILL.md 仍可能在 ship 阶段合并 feature 分支"
 grep -q "\.paseo/todos.md" "$ship_skill" 2>/dev/null && grep -q "只关闭有证据" "$ship_skill" 2>/dev/null && pass "SKILL.md 包含项目 todo 发布关闭规程" || fail "SKILL.md 缺失项目 todo 发布关闭规程"
+grep -q "写入方闭环\|先读 global" "$ship_skill" 2>/dev/null && pass "ship global-learnings 写入方声明读取闭环" || fail "ship global-learnings 仍为只写死功能"
+
+echo ""
+echo "=== 8.1 learnings 系统规程校验 ==="
+learnings_ref="$ROOT/upaseo/references/learnings-precheck.md"
+grep -q "category 作用域过滤\|category 作用域" "$learnings_ref" 2>/dev/null && pass "learnings-precheck 定义 category 作用域过滤" || fail "learnings-precheck 缺失 category 作用域过滤"
+grep -q "先读全局\|先读 global\|global-learnings.jsonl" "$learnings_ref" 2>/dev/null && pass "learnings-precheck 定义 global+项目读取顺序" || fail "learnings-precheck 缺失 global 读取顺序"
+grep -q "老化\|aged" "$learnings_ref" 2>/dev/null && pass "learnings-precheck 定义老化降级规则" || fail "learnings-precheck 缺失老化降级规则"
+grep -q "last_confirmed" "$learnings_ref" 2>/dev/null && pass "learnings-precheck 定义 last_confirmed 字段" || fail "learnings-precheck 缺失 last_confirmed 字段"
+# 各技能引用共享规程而非内联五步
+ref_count=$(grep -rl "执行标准避障前置读取" "$ROOT"/*/SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+[ "$ref_count" -ge 10 ] && pass "至少 $ref_count 个技能引用 learnings-precheck 共享规程" || fail "引用 learnings-precheck 的技能数不足($ref_count)"
 
 echo ""
 echo "=== 9. upaseo-compact 核心压缩规程校验 ==="
