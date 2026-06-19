@@ -14,9 +14,10 @@ description: >-
 
 ## Output Language
 
-- 对用户的说明、测试矩阵、环境冻结说明、执行报告、缺陷正文，**默认全部使用中文输出**。
-- 命令、路径、环境变量名、CLI 子命令名、Case ID、错误原文、日志片段可以保留英文原样，避免不可复制。
-- 若需要引用 `gh issue create` 创建远端 issue，也应优先用中文标题/正文；只有仓库已有固定英文模板或用户明确要求时，才切换为英文。
+- **默认中文**：对用户的说明、测试矩阵、环境冻结说明、执行报告、缺陷正文，默认全部使用中文输出。
+- **`--lang` 覆盖**：用户可在调用 `/upaseo-e2e <target> --lang en` 时切换为英文输出，或 `--lang zh` 显式确认中文（缺省即 `zh`）。`--lang en` 时：测试矩阵、执行报告、issue 标题与正文均改为英文；命令、路径、环境变量名、CLI 子命令名、Case ID、错误原文、日志片段仍保留原样以便可复制。
+- **降级 issue 文件**：`--lang en` 时本地降级 issue 文件的头部字段也切换为英文（脚本 `report_issue.sh` 接收 `--lang en|zh`，缺省 `zh`）；`--lang zh` 时维持中文头部。
+- **远端 issue**：除非仓库已有固定英文模板或用户明确要求，优先中文标题/正文；`--lang en` 显式要求英文时切换为英文。
 
 ## Scope Boundary
 
@@ -151,8 +152,13 @@ description: >-
 bash upaseo-e2e/scripts/report_issue.sh \
   --title "[e2e][CLI-03] login subcommand exits 1 on valid token" \
   --body-file /tmp/issue-body.md \
-  --label bug
+  --label bug \
+  --lang zh
 ```
+
+- `--lang zh`（缺省）：本地降级 issue 文件头部字段使用中文（状态/创建时间/标签/仓库/GH 降级原因）。
+- `--lang en`：本地降级 issue 文件头部字段切换为英文（Status/Created/Label/Repo/GH Fallback Reason）。`--lang` 不影响 `--title` 与 `--body-file` 内容，调用方自行决定标题/正文语言。
+- `--lang` 不影响 `gh issue create` 的成功路径；当远端 issue 创建成功时，`--lang` 只作用于降级落盘文件的头部。
 
 该脚本的行为是：
 
@@ -162,6 +168,8 @@ bash upaseo-e2e/scripts/report_issue.sh \
 ```text
 <项目根目录>/.github/issues/<timestamp>-<slug>.md
 ```
+
+本地降级文件的 slug 由 `--title` 生成：脚本保留 ASCII 字母数字并折叠为连字符；**当标题为纯中文（无任何 ASCII 字符）时**，脚本用标题字节的短哈希生成 `issue-<8hex>` 兜底，避免空 slug（见脚本 §SLUG）。
 
 ### issue / 本地记录正文最低要求
 

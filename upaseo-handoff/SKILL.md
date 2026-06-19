@@ -24,6 +24,7 @@ Read the **upaseo** skill — provider for the receiving agent comes from orches
 - 路径：`<项目根目录>/.paseo/handoffs/<YYYYMMDD-HHMM>-<short-task-slug>.md`
 - 若 `.paseo/handoffs/` 不存在，先创建目录。
 - 文档内容必须使用下方 `The handoff prompt` 的同一结构，完整记录任务、上下文、相关文件、当前状态、已尝试方案、决策、验收标准和约束。
+- 文档头部必须声明 `Priority: handoff`（见 `upaseo/SKILL.md` "Source-of-Truth Priority Chain"），表示本文件在 SoT 链中位列 handoff 层：现场状态/任务语义以本文件为准，但 goal 边界与验收约束不可被覆盖；若同时存在 compact 文档，compact 优先。
 - 创建接收 Agent 时，handoff prompt 必须包含该文档绝对路径，并要求接收 Agent 第一步读取它。
 - 对话里的简短说明不能替代该文档；文档才是交接事实源。
 
@@ -41,6 +42,7 @@ Read the **upaseo** skill — provider for the receiving agent comes from orches
 The receiving agent has zero context. Include:
 
 ```
+Priority: handoff
 ## Task
 [Imperative description.]
 

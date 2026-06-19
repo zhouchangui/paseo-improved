@@ -52,6 +52,7 @@ description: >-
 
 ### Step 2: 历史开发资产固化与 CHANGELOG 追加 (Story Release & Changelog)
 由 `release-auditor` 角色主导：
+0. **发布前资产防漂移复核**：对本次会话所有已写入 `.agents/story/` 的 `* [Updated in Iter N]` 条目，按 `upaseo/references/diff-asset-validation.md` 标准清单做最终复核——确认每个条目在最终 diff 中有对应实现、有验证证据。发现漂移条目（空头承诺或未验证）必须阻断发布，回退该条目或要求补验证后再继续。
 1. **资产版本号转换 (Story Solidification)**：
    - 扫描项目 `.agents/story/` 目录下的六个历史资产文件：`stories.md`、`data_models.md`、`apis.md`、`modules.md`、`architecture_constraints.md` 和 `coding_standards.md`。
    - 将这些文档中，所有在本次开发会话中由主 Agent 追加的以 `* [Updated in Iter N]` 为前缀的描述备注，增量更新替换为：

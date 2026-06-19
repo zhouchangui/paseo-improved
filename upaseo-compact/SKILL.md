@@ -70,6 +70,9 @@ description: >-
 ```markdown
 # Compact Context: <short task title>
 
+Priority: compact
+> 本文件在 SoT 优先级链中位列最高（compact > handoff > plan > goal），恢复时优先读取；现场状态/当前进度/下一步以本文件为准。goal 的边界与验收约束不可被覆盖。链定义见 `upaseo/SKILL.md` "Source-of-Truth Priority Chain"。
+
 ## Restore Prompt
 <最终输出给用户的恢复提示词，必须包含本 compact 文档的绝对路径。>
 

@@ -19,6 +19,7 @@
 ## 3. 外部集成与适配器边界
 
 * [Legacy Asset] `upaseo-e2e` 对缺陷上报采取双通道边界：优先使用 `gh issue create` 创建远端 issue；若 `gh` 不可用、未登录或仓库上下文缺失，则必须降级写入仓库内 `.github/issues/`，不得因为外部集成不可用而丢失缺陷记录。
+* [Legacy Asset] `upaseo-init` 必须把 AGENTS.md 生成约束内置在自身技能包内；初始化目标项目时可以读取本技能的 `references/create-agentsmd.md`，不得要求目标环境额外安装或可用外部 `create-agentsmd` 技能。
 
 ---
 

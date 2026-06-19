@@ -69,6 +69,9 @@ description: >-
 ```text
 # Goal: <short title>
 
+Priority: goal
+> 本文件在 SoT 优先级链中位列最低（compact > handoff > plan > goal），但目标边界与验收约束不可被更高优先级文档覆盖或稀释。链定义见 `upaseo/SKILL.md` "Source-of-Truth Priority Chain"。
+
 目标：
 【一句话说明最终要完成的结果。】
 

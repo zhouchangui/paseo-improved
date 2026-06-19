@@ -39,6 +39,21 @@ Boundary:
 
 Making the backend itself pluggable across hosts is out of scope for the current design; skills that need low-level mechanics should read this file.
 
+## Source-of-Truth Priority Chain
+
+When a session has multiple durable documents (goal, plan, handoff, compact), recovery and decision-making must follow a single authoritative priority chain to avoid the "each doc claims read-me-first" conflict. Defined here as the single source.
+
+**Priority (high to low):**
+
+1. **compact** (`.paseo/compacts/<ts>-<slug>.md`) — newest现场快照, wins for workspace state, current progress, validation evidence, next actions.
+2. **handoff** (`.paseo/handoffs/<ts>-<slug>.md`) — wins for task semantics, acceptance criteria, what-was-tried, decisions, constraints carried to a fresh agent.
+3. **plan** (`.paseo/plans/<slug>.md` + `.paseo/plans/<slug>/iter_N_design_tasks.md`) — wins for roadmap, iteration state machine (`State:` field), progress notes, per-iteration design.
+4. **goal** (`.paseo/goals/<slug>.md`) — wins for **目标 / 边界 / 验证 constraints only**. Goal boundary and acceptance constraints are immutable by higher-priority docs; higher-priority docs may refine implementation but must not dilute or remove goal constraints.
+
+**Conflict resolution rule:** Read in chain order (compact → handoff → plan → goal). For *workspace state / current progress / next actions*, the highest-priority document present wins. For *goal boundary and acceptance constraints*, the goal is authoritative and cannot be overridden. If a higher-priority doc's stated plan contradicts the goal boundary, surface the conflict to the user instead of silently proceeding.
+
+**Recovery entry point:** `using-upaseo` 异常恢复、`upaseo-compact` Restore Prompt、`upaseo-handoff` 首步读取 all reference this chain instead of each claiming "read me first." Each durable document should declare its own `Priority:` position in its front matter / header.
+
 Upaseo is backed by a daemon that supervises AI coding agents on your machine. Control it through tools or a CLI.
 
 ## Worktrees

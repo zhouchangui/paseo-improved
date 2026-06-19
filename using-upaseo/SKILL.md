@@ -159,6 +159,9 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 方案确定后，Orchestrator 必须将整个技术方案切分为数个紧凑的**增量迭代（Incremental Iterations）**。若本次是从 `.paseo/goals/<slug>.md` 启动，先把 goal 翻译成可执行路线图；若不是，则直接从用户任务提炼路线图。此时只允许形成路线图级别的迭代假设，具体功能设计和验收标准必须在每个迭代开始前通过“迭代计划评审会”定稿。
 在 `.paseo/plans/<slug>.md` 写入整体路线图（Source of Truth），标记 Iterations：
 ```markdown
+schema_version: 1
+State: Designing
+
 ## 迭代路线图
 - [ ] 迭代 1：[简短目标]
 - [ ] 迭代 2：[简短目标]
@@ -166,6 +169,10 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 ## Progress Notes
 (由 Orchestrator 在每个迭代完工后追加)
 ```
+
+> **`schema_version` 字段**：计划文件首行必须写 `schema_version: 1`，决定迭代设计文件命名约定（见上文 §异常恢复 的 schema_version 迁移规则）。无该字段的旧文件视为 `schema_version: 0`，恢复时先迁移再继续。`State:` 字段持久化当前迭代阶段状态机，用于断电恢复。
+>
+> **`Priority:` 元数据**：计划文件头部还应声明 `Priority: plan`（见 `upaseo/SKILL.md` "Source-of-Truth Priority Chain"），让恢复 Agent 知晓本文件在 SoT 链中的位置。
 
 > **快速模式**下只有 1 个迭代，但仍必须创建最小主计划文件 `.paseo/plans/<slug>.md`，用于恢复、状态审计和 `/upaseo-ship` 发布前校验。
 
@@ -259,7 +266,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 **自动推进时：**
 - 在主计划文件中记录 `[auto-advanced]` 标记及验证证据摘要。
-- **资产防事实漂移校验 (Diff-Asset Validation)**：在增量刷新资产前，主 Agent 必须对比 `git diff` 与 `iter_N_design_tasks.md`，进行严格的一致性审计。**确保只有确实在代码中被实现并验证通过的用例和结构变更，才允许增量更新写入核心历史资产**，严防空头承诺和设计漂移。
+- **资产防事实漂移校验 (Diff-Asset Validation)**：执行标准校验清单，见 `upaseo/references/diff-asset-validation.md`（六步三方对照：diff 全集 × 设计承诺 × 验证证据，逐条 `[write]/[drop]/[hold]` 登记）。校验通过前严禁更新 `.agents/story/`，严防空头承诺和设计漂移。
 - 校验通过后，执行增量历史资产刷新：若本轮新增或修改了前后台用户功能点用例、数据库表结构、类与核心数据结构体、公共 API 路由与服务规范、新的包目录、前端展示页面路由、架构约束或编码规范，必须由主 Agent 或 `story-updater` 更新 `.agents/story/` 对应文件，并以 `* [Updated in Iter <N>]` 作为前缀。
 - 将当前迭代路线图状态更新为 `[x]`，更新计划文件中的 `State: Completed`（或在多迭代下标记 `State: Next_Iteration_Start`），并创建本迭代高追溯性命名（如 `checkpoint-iter-<N>`）的 checkpoint commit，记录 commit hash 后方可进入下一迭代。
 - checkpoint commit 只允许包含本迭代计划和本迭代实际修改的文件。提交前必须复查 `git status --short`，发现无关改动时保留不动并在计划中说明；不得为了整洁提交而回退、stash 或 stage 用户/他人已有改动。
@@ -269,7 +276,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 1. 本迭代完成的成果。
 2. 捕获到的关键**日志输出片段/验证结果**。
 3. 指导用户自行操作的**手动验证步骤**。
-4. 等待用户回复"验证通过"后，将当前迭代路线图状态更新为 `[x]`。先执行**资产防事实漂移校验**，校验通过后执行必要的增量历史资产刷新，标记计划文件 `State`，创建高追溯性命名的 checkpoint commit，记录 commit hash 后方可继续。若不通过，留在本迭代修复。
+4. 等待用户回复"验证通过"后，将当前迭代路线图状态更新为 `[x]`。先执行**资产防事实漂移校验**（标准清单见 `upaseo/references/diff-asset-validation.md`），校验通过后执行必要的增量历史资产刷新，标记计划文件 `State`，创建高追溯性命名的 checkpoint commit，记录 commit hash 后方可继续。若不通过，留在本迭代修复。
 
 #### G. 回滚机制 (Rollback)
 
@@ -328,11 +335,17 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 如果执行过程中意外中断（如服务器重启、Token 耗尽），重新调用 `/using-upaseo <slug>` 时，系统必须遵循“文件即上下文”理念进行秒级无感现场自愈恢复：
 
-1. **启动首步必读（自愈凭证）**：Orchestrator 唤醒后，**第一步且必须**优先读取主计划 `.paseo/plans/<slug>.md` 以及当前未完成迭代的 `iter_<N>_design_tasks.md`（用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节；若遇到旧版历史文件 `iter_<N>_design.md`，亦须兼容读取，并在继续开发前自动迁移为 `iter_<N>_design_tasks.md`），以此作为重建现场的唯一权威上下文。
-2. **自愈状态机现场复原**：根据文件中持久化登记的 `State` 字段与路线图状态，自动引导进入对应的操作阶段：
+**恢复读取顺序遵循 SoT 优先级链**（权威定义见 `upaseo/SKILL.md` "Source-of-Truth Priority Chain" 小节）：compact(最新现场) > handoff > plan > goal。若存在 compact 或 handoff 文档，先读它们恢复现场状态与任务语义；plan 用于路线图与状态机；goal 的边界/验证约束不可被覆盖。本节下方"启动首步必读"聚焦 plan 层（最常见恢复路径），但若 compact/handoff 存在，它们在"现场状态/下一步"上优先于 plan。
+
+1. **启动首步必读（自愈凭证）**：Orchestrator 唤醒后，**第一步且必须**按 SoT 优先级链读取：若存在最新 compact 文档（`.paseo/compacts/`）或 handoff 文档（`.paseo/handoffs/`）先读；然后读取主计划 `.paseo/plans/<slug>.md` 以及当前未完成迭代的 `iter_<N>_design_tasks.md`（用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节）。plan 文件含 `schema_version` 字段时按其版本决定迭代设计文件命名（见下文 §迁移规则）；若遇到无 `schema_version` 的旧文件（视为 `schema_version: 0`）且存在旧版历史文件 `iter_<N>_design.md`，兼容读取并在继续开发前自动迁移为 `iter_<N>_design_tasks.md` 同时把 plan 升级为 `schema_version: 1`。以此作为重建现场的权威上下文。
+2. **plan schema_version 迁移规则**：
+   - `schema_version: 0`（无字段）：兼容读取 `iter_<N>_design.md`，迁移为 `iter_<N>_design_tasks.md`，升级 plan 字段为 `schema_version: 1`。
+   - `schema_version: 1`（当前）：只读 `iter_N_design_tasks.md`，不再兼容旧名。
+   - `schema_version: 2`（未来触发点）：预留，届时可移除 `iter_N_design.md` 兼容分支。本次不强制迁移到 2，只埋点。
+3. **自愈状态机现场复原**：根据文件中持久化登记的 `State` 字段与路线图状态，自动引导进入对应的操作阶段：
    - `State: Designing` $\rightarrow$ 自动读取并恢复迭代设计草案编写与评审会阶段。
    - `State: Implementing` $\rightarrow$ 自动派生子 Agent，直接唤醒并调度 `upaseo-loop` 继续驱动实现，还原 Worker 现场。
    - `State: Verifying` $\rightarrow$ 自动进入日志与测试优先验证阶段。
    - `State: Waiting_Gate` $\rightarrow$ 重新为用户渲染手动验证步骤，恢复等待用户验证网关。
    - `State: Completed` / `State: Next_Iteration_Start` $\rightarrow$ 自动推进至下一迭代或自理自审交付阶段。
-3. **流程恢复宣告**：Orchestrator 成功恢复现场后，需向用户发送一句话极简说明（如：“*检测到 Iteration 1 在断电前处于 Implementing 状态，现场已完美还原，正继续驱动子 Agent 实现...*”），全程对用户零心智负担。
+4. **流程恢复宣告**：Orchestrator 成功恢复现场后，需向用户发送一句话极简说明（如：“*检测到 Iteration 1 在断电前处于 Implementing 状态，现场已完美还原，正继续驱动子 Agent 实现...*”），全程对用户零心智负担。
