@@ -3,13 +3,13 @@ name: using-upaseo
 description: >-
   核心开发工作流编排技能。运行重度开发任务的生命周期管理，内置自主复杂度判定、
   微改快速通道、增量式迭代推进、独立迭代设计文档、自主推进/用户验证网关、
-  风险分级 upaseo-loop、UI 强制 Gemini、优先日志验证、PR 提交前强制自审简化、
+  风险分级 upaseo-loop、UI 走 preferences、优先日志验证、PR 提交前强制自审简化、
   会话复盘与避障学习落盘。Use for /using-upaseo development tasks, including optional quick/full, autopilot/gate, worktree, and PR-per-iteration modes.
 ---
 
 # Using Upaseo (核心开发工作流技能)
 
-本技能为唯一的完整开发工作流入口。它将一项任务或一个已落盘的 goal 在完全本地化的 `upaseo` 基座上驱动，严格通过：**可选 goal 读取 → 避障前置 → 自主复杂度与风险判定 → 微改快速通道或 quick/full 模式 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 风险分级 Loop 实现 → 强制 Gemini UI → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
+本技能为唯一的完整开发工作流入口。它将一项任务或一个已落盘的 goal 在完全本地化的 `upaseo` 基座上驱动，严格通过：**可选 goal 读取 → 避障前置 → 自主复杂度与风险判定 → 微改快速通道或 quick/full 模式 → 脑暴前置（完整模式） → 增量迭代拆分 → 单迭代设计草案 → 迭代计划评审会 → 自主推进/用户网关 → 风险分级 Loop 实现 → UI 走 preferences → 优先日志验证 → 提交PR前强制自审与简化 → 会话复盘学习落盘**的闭环推进。
 
 **User's request:** $ARGUMENTS
 
@@ -71,7 +71,7 @@ Step 0.2: 自主判定执行模式 (micro / quick / full)
 ### 0. 偏好设置检查与目录初始化 (Pre-start)
 
 1. 读取 `~/.paseo/orchestration-preferences.json` 以获取底层 Agent 的 Provider 分发。
-2. **UI 设计 Gemini 专属约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider **强制限定为 `gemini` 系列模型**。无 Gemini 可用时，暂停并通知用户，不得降级。
+2. **UI 设计 Provider 约束**：涉及 `ui` 或 `ui-impl` 阶段时，Provider 从 `~/.paseo/orchestration-preferences.json` 的 `ui` 分类解析。若该分类未配置，默认使用 `gemini` 系列模型并告知用户可在 preferences 中覆盖；若用户 preferences 显式指定非 Gemini provider，以用户为准。
 3. **自动初始化 `.paseo/` 运行态目录、`.agents/story/` 历史资产库与 `AGENTS.md` 引用自愈**：
    - 运行 `mkdir -p <项目根目录>/.paseo/goals`、`mkdir -p <项目根目录>/.paseo/plans` 与 `mkdir -p <项目根目录>/.agents/story` 确保目录结构存在。
    - 若 `<项目根目录>/.paseo/todos.md` 缺失，创建最小 todo 模板；后续用户提到 todo/待办/backlog 时交由 `/upaseo-todo` 写入，不只保留在对话里。
@@ -206,7 +206,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 - 验证方式：<logs|browser|manual>
 - 验证标准：<具体通过条件>
 
-## 必读文件（启动后第一步必须 view_file 读取以下文件）
+## 必读文件（启动后第一步必须用当前宿主的文件读取原语读取以下文件，见 `upaseo/SKILL.md` 宿主工具兼容小节）
 - 迭代设计与任务文档：<iter_N_design_tasks.md 绝对路径>
 - 架构约束资产：<项目根目录>/.agents/story/architecture_constraints.md
 - 编码规范资产：<项目根目录>/.agents/story/coding_standards.md
@@ -222,14 +222,14 @@ Orchestrator 在 `initialPrompt` 中必须：
 硬性读取顺序：先读取迭代设计文档，再读取 `architecture_constraints.md` 和 `coding_standards.md`，然后按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。严禁跳过这些启动读取动作。严禁违反已有的核心历史开发资产、架构约束和编码规范进行重复造轮子、破坏性重构或风格漂移。
 
 - 除微改快速通道外，启动 **`upaseo-loop`** 技能，以**实现-测试-纠错**的闭环状态去驱动 `refactorer` 和 `impl` 角色开始写代码；快速模式也必须使用轻量 loop（建议 `max-iterations <= 3`），不得由 Agent 直接绕过 loop 自行修改。
-- 如果这是 UI 或 Styling 改动，**强制要求 `upaseo-loop` 的 worker 只能使用 Gemini 模型**。
+- 如果这是 UI 或 Styling 改动，**`upaseo-loop` 的 worker provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；未配置时默认 Gemini 系列，用户 preferences 显式指定非 Gemini 时以用户为准**（详见 `upaseo/SKILL.md`）。
 - TDD 模式只用于有行为风险、验收不确定或需要锁定回归的改动：先写失败测试/日志埋点，再让它跑通。微改快速通道不得为了“走流程”新增低价值测试。
 
 #### D. 子 Agent 完工通知与主计划状态同步（文件即上下文，实时记录）
 
 当子 Agent 完成阶段性任务并发出完工通知时，**主 Agent (Orchestrator) 必须执行以下同步规程，在完成之前不得执行任何后续动作**：
 
-1. **读取子 Agent 交付产出**：查看子 Agent 的最终报告或直接 `view_file` 读取受影响的关键文件。
+1. **读取子 Agent 交付产出**：查看子 Agent 的最终报告或直接读取受影响的关键文件（用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节）。
 2. **立即持久化记录状态（文件即上下文）**：主 Agent 不依赖自身 memory，必须**立即、实时地将当前执行状态与中间证据持久化写入主计划文件 `.paseo/plans/<slug>.md`**。在 `Progress Notes` 段落中追加“实现完成，等待验证”的精确说明。同时在主计划或迭代设计文档中显式声明当前的业务 `State`（例如 `State: Verifying`），便于断电恢复。此时不得把路线图勾选为 `[x]`。
 3. **受阻状态同步**：若子 Agent 报告 blocked 或实现结果不可验证，必须在 `.paseo/plans/<slug>.md` 中将当前迭代标记为 `[!]` 并将 `State` 更新为 `State: Blocked`，留在本迭代修复。
 4. **保存计划文件后，方可进入后续流程**。
@@ -328,7 +328,7 @@ Orchestrator 在 `initialPrompt` 中必须：
 
 如果执行过程中意外中断（如服务器重启、Token 耗尽），重新调用 `/using-upaseo <slug>` 时，系统必须遵循“文件即上下文”理念进行秒级无感现场自愈恢复：
 
-1. **启动首步必读（自愈凭证）**：Orchestrator 唤醒后，**第一步且必须**优先 `view_file` 读取主计划 `.paseo/plans/<slug>.md` 以及当前未完成迭代的 `iter_<N>_design_tasks.md`（若遇到旧版历史文件 `iter_<N>_design.md`，亦须兼容读取，并在继续开发前自动迁移为 `iter_<N>_design_tasks.md`），以此作为重建现场的唯一权威上下文。
+1. **启动首步必读（自愈凭证）**：Orchestrator 唤醒后，**第一步且必须**优先读取主计划 `.paseo/plans/<slug>.md` 以及当前未完成迭代的 `iter_<N>_design_tasks.md`（用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节；若遇到旧版历史文件 `iter_<N>_design.md`，亦须兼容读取，并在继续开发前自动迁移为 `iter_<N>_design_tasks.md`），以此作为重建现场的唯一权威上下文。
 2. **自愈状态机现场复原**：根据文件中持久化登记的 `State` 字段与路线图状态，自动引导进入对应的操作阶段：
    - `State: Designing` $\rightarrow$ 自动读取并恢复迭代设计草案编写与评审会阶段。
    - `State: Implementing` $\rightarrow$ 自动派生子 Agent，直接唤醒并调度 `upaseo-loop` 继续驱动实现，还原 Worker 现场。

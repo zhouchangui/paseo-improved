@@ -28,13 +28,13 @@ Loops are a CLI primitive: `paseo loop run`. Manage with `paseo loop ls`, `paseo
 
 1. Understand the user's intent from `$ARGUMENTS` and the conversation.
 2. **Worker prompt** — self-contained, concrete about what to do this iteration, explicit about what counts as progress. **若 Step 0.1 提取出了避障规则，必须将其作为 worker prompt 的硬性前缀注入。**
-3. **上下文文件强制读取指令**：如果本 loop 是由 `using-upaseo` 的迭代流程触发，worker prompt 的第一条指令必须要求 worker 先通过 `view_file` 依次读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 的绝对路径（由调用方显式传入），再按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。
+3. **上下文文件强制读取指令**：如果本 loop 是由 `using-upaseo` 的迭代流程触发，worker prompt 的第一条指令必须要求 worker 先依次读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 的绝对路径（由调用方显式传入；用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节），再按本轮改动范围读取 `stories.md`、`data_models.md`、`apis.md` 或 `modules.md`。
 4. **Verification** — pick the right shape:
    - Shell check (`--verify-check`) for objective criteria a command can answer (`gh pr checks --fail-fast`, `npm test`).
    - Verifier prompt (`--verify`) for judgment ("Return done=true only if all tests pass and the changed files are coherent. Cite the command and the outcome.").
    - Both, when shell rules out the obvious failures and the verifier judges the rest.
-   - **合规检查注入**：verifier prompt 中必须增加一条检查——"确认 worker 的早期 tool call 中包含 `view_file` 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`，若任一缺失则判定为不合规（done=false）"。
-5. **Providers** — `--provider` for the worker, `--verify-provider` for the verifier. From preferences unless the user named them. For implementation loops, pair worker and verifier on different providers — each catches the other's blind spots. **Remember, if the task is UI or styling related, the worker provider MUST be Gemini.**
+   - **合规检查注入**：verifier prompt 中必须增加一条检查——"确认 worker 的早期动作中读取了迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 这三个路径（按路径被读取判定，不按工具名判定），若任一缺失则判定为不合规（done=false）"。
+5. **Providers** — `--provider` for the worker, `--verify-provider` for the verifier. From preferences unless the user named them. For implementation loops, pair worker and verifier on different providers — each catches the other's blind spots. **UI 或 styling 相关任务的 worker provider 从 `orchestration-preferences.json` 的 `ui` 分类解析；未配置时默认 Gemini 系列（详见 `upaseo/SKILL.md`）。**
 6. **Sleep** — `--sleep` only when polling something external. Otherwise let it run as fast as the loop completes.
 7. **Stops** — set a sensible `--max-iterations` and/or `--max-time`. Open-ended loops are how runaways happen.
 8. **Archive** — `--archive` keeps agents after each iteration for inspection.
@@ -50,6 +50,6 @@ Loops are a CLI primitive: `paseo loop run`. Manage with `paseo loop ls`, `paseo
 
 ## Prompt rules
 
-**Worker** — self-contained, concrete (commands, files, branches, tests, PRs, systems), explicit about what counts as progress this iteration. **必须包含避障规则前缀（若有），并在由 using-upaseo 触发时包含迭代设计文档、`architecture_constraints.md`、`coding_standards.md` 的强制读取指令。**
+**Worker** — self-contained, concrete (commands, files, branches, tests, PRs, systems), explicit about what counts as progress this iteration. **必须包含避障规则前缀（若有），并在由 using-upaseo 触发时包含迭代设计文档、`architecture_constraints.md`、`coding_standards.md` 的强制读取指令（用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节）。**
 
-**Verifier** — checks facts, doesn't suggest fixes, cites commands/outputs/file evidence, specific about what "done" means. **必须包含合规检查：确认 worker 早期 tool call 中含有 view_file 读取迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md`。**
+**Verifier** — checks facts, doesn't suggest fixes, cites commands/outputs/file evidence, specific about what "done" means. **必须包含合规检查：确认 worker 早期动作中读取了迭代设计文档、`architecture_constraints.md` 和 `coding_standards.md` 这三个路径（无论用哪个宿主的文件读取原语，按"路径被读取"判定，不按工具名判定；详见 `upaseo/SKILL.md` 宿主工具兼容小节）。**

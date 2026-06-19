@@ -17,12 +17,12 @@ Read the **upaseo** skill. Contrast is the point of a committee, so pick across 
 
 ## Composition
 
-Two members with different reasoning styles:
+Two members with different reasoning styles, picked across providers deliberately. Default members (override only when the user explicitly asks for different members):
 
-- **Claude Opus** with extended thinking
-- **Codex GPT-5.4** or **Gemini 2.5 Pro** with thinking
+- **Claude Opus** with extended thinking (`planning` preference category)
+- A contrasting frontier coder/reasoner from preferences — default `Codex GPT-5.4` or **Gemini 2.5 Pro** with thinking (`impl`/`audit` category)
 
-Override only when the user explicitly asks for different members.
+Resolve member providers through `orchestration-preferences.json` (see `upaseo/SKILL.md`) rather than hardcoding when preferences supply a different pairing; contrast is the point, so if both members would resolve to the same family, deliberately swap one to a different family.
 
 ## Hard rules
 
@@ -49,7 +49,7 @@ Write a problem-level prompt:
 - What you tried and why it failed
 - Explicit: "do root cause analysis"
 - Explicit: "use think-harder — state assumptions, ask why three levels deep, check whether you're patching a symptom or removing the problem"
-- **上下文文件**：若有主计划文件或迭代设计文档，在 prompt 中附带绝对路径，要求 committee 成员首步使用 `view_file` 读取后再开始分析。
+- **上下文文件**：若有主计划文件或迭代设计文档，在 prompt 中附带绝对路径，要求 committee 成员首步读取后再开始分析（用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节）。
 
 Create both agents in parallel via Paseo with `[Committee] <task>` titles and the same prompt. Resume synthesis only after both completion notifications arrive — not just whichever finishes first.
 

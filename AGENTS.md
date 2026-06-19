@@ -1,3 +1,4 @@
+<!-- Host note: the @import below is a Codex-specific directive. On non-Codex hosts (ZCode, Gemini CLI, Claude Code), ignore this line and rely on the rest of this file. -->
 @/Users/zcg/.codex/RTK.md
 
 # Upaseo Agent Guide

@@ -34,7 +34,7 @@ The advisor has zero context. Make it self-contained:
 - What you've considered and what you've ruled out.
 - Relevant files by path (don't paste — let the agent read).
 - Explicit ask: "give me a recommendation, with reasoning."
-- **上下文文件**：若有主计划文件或迭代设计文档，在 briefing 中附带绝对路径，要求 advisor 首步使用 `view_file` 读取后再开始分析。
+- **上下文文件**：若有主计划文件或迭代设计文档，在 briefing 中附带绝对路径，要求 advisor 首步读取后再开始分析（用当前宿主的文件读取原语，见 `upaseo/SKILL.md` 宿主工具兼容小节）。
 
 End with the no-edits suffix:
 

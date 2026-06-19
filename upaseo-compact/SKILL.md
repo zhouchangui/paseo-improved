@@ -15,16 +15,16 @@ description: >-
 
 系统 compact 容易丢关键上下文，所以本技能必须先创建 durable compact document，再输出 prompt。对话里的短摘要不能替代文档；文档才是恢复事实源。
 
-## Hook Self-Heal
+## Hook Self-Heal (宿主适配)
 
-执行 `/upaseo-compact` 时，必须先检查当前仓库的 **项目级 Codex hooks** 是否已安装：
+`/upaseo-compact` 的自动 compact 文档化与恢复提示注入依赖**项目级 compact hooks**。当前默认实现是 **Codex** 的 `PreCompact`/`PostCompact` hooks；其他宿主（ZCode、Gemini CLI、Claude Code）没有等价的自动触发机制。因此本步骤必须先做**宿主探测**：
 
-- `.codex/hooks.json` 中的 `PreCompact` hook 在系统 compact 前自动创建 `.paseo/compacts/...md`
-- `.codex/hooks.json` 中的 `PostCompact` hook 在 compact 后自动注入恢复提示
-- 该自动化是 **repo-scoped** 的，只对当前仓库生效，不修改用户的全局 Codex 配置
-- hook 失败时必须 fail-open，不能阻断 compact 主流程
+- **Codex 宿主**：检查 `.codex/hooks.json` 中的 `PreCompact` hook（系统 compact 前自动创建 `.paseo/compacts/...md`）与 `PostCompact` hook（compact 后自动注入恢复提示）。该自动化是 **repo-scoped** 的，只对当前仓库生效，不修改用户的全局 Codex 配置。hook 失败时必须 fail-open，不能阻断 compact 主流程。
+- **非 Codex 宿主**：hooks 不会自动触发。必须向用户明确提示："*当前宿主不支持自动 compact hooks，compact 文档不会在系统 compact 时自动创建。请手动执行 `/upaseo-compact` 来生成文档与恢复提示词；或若宿主支持等价 pre/post compact 钩子，可按相同契约（PreCompact 创建文档、PostCompact 注入恢复提示）接入。*"
 
-若发现以下任一文件缺失，则**先自动补齐再继续 compact**：
+### Codex hooks 自愈（仅 Codex 宿主执行）
+
+若当前是 Codex 宿主且发现以下任一文件缺失，则**先自动补齐再继续 compact**：
 
 - `<项目根目录>/.codex/hooks.json`
 - `<项目根目录>/.codex/hooks/pre-compact.mjs`
@@ -37,7 +37,7 @@ description: >-
 - 若文件已存在，则优先保留现有版本，不做无谓覆盖；只有明显缺失时才创建
 - 自愈安装完成后，再继续执行 compact 文档生成与恢复提示词输出
 
-在最终输出的 `验证：` 段落中，必须说明本次是“hooks 已存在”还是“hooks 已自动补齐”。
+在最终输出的 `验证：` 段落中，必须说明：当前探测到的宿主、本次是"hooks 已存在"还是"hooks 已自动补齐"还是"非 Codex 宿主，已提示手动执行"。
 
 ## Step 0: 避障读取
 

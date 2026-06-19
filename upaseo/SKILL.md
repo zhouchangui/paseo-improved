@@ -17,7 +17,27 @@ For full product development tasks, use `/using-upaseo <task>`. That workflow ow
 
 ## Host Tool Compatibility
 
-Some skill prompts say `view_file` because many receiving agents expose that exact read tool. Treat it as a semantic requirement, not a hard dependency on one host API: if the current agent runtime names the read primitive differently, use the nearest non-mutating file read tool (`read_file`, `cat`, `sed`, editor read, or equivalent). When writing prompts for child agents, keep the wording explicit: they must read the listed files before acting, using whatever file-read tool their runtime provides.
+Skill prompts describe file reads as a **semantic requirement**, not a hard dependency on one host API. The phrase "读取 `<path>`" (or the legacy word `view_file`) means: read that file using whatever non-mutating file-read primitive the current host runtime provides. Known host mappings:
+
+| Host | File-read primitive |
+|:---|:---|
+| Codex | `view_file` |
+| ZCode | `Read` |
+| Claude Code | `Read` |
+| Gemini CLI | `read_file` |
+
+When writing prompts for child agents, keep the wording explicit: they must read the listed files before acting, using whatever file-read tool their runtime provides. **Never write a verifier or compliance check that greps a worker's tool-call stream for a literal tool name** (e.g. `view_file`) — match on the *paths read* instead, so the check holds across hosts.
+
+## Runtime Backend
+
+Upaseo assumes **Paseo as the default execution backend**: the daemon owns agent lifecycle, worktree management, the loop primitive, async completion notifications, and the CLI surface. This is an explicit architectural decision (the project requirement exempts Paseo from "external dependency" status) and is **not** host-coupling — Paseo is the backend, while the host (Codex/ZCode/Gemini CLI/Claude Code) is the runtime that drives the skills.
+
+Boundary:
+
+- **Backend primitives (provided by Paseo, not host-replaceable here)**: `create_agent`, `send_agent_prompt`, `list_agents`, `archive_agent`, `create_worktree`, `list_worktrees`, `archive_worktree`, `create_schedule`, `paseo loop run`, daemon health/debug, async `background` + `notifyOnFinish` contract.
+- **Host tools (replaceable per host)**: file-read primitive (see table above), slash-command invocation, skill loading mechanism, shell/PATH, and any host-specific hooks (e.g. Codex `PreCompact`/`PostCompact`).
+
+Making the backend itself pluggable across hosts is out of scope for the current design; skills that need low-level mechanics should read this file.
 
 Upaseo is backed by a daemon that supervises AI coding agents on your machine. Control it through tools or a CLI.
 
